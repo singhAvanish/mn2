@@ -22,6 +22,14 @@ export const railTypes: Record<number, any> = {
       { name: "brandImage", label: "Brand Logo", type: "image" },
       { name: "brandName", label: "Brand Name", type: "text" },
     ]
+  },
+  4: {
+    label: "Brands Carousel (logo + name)",
+    itemFields: [
+      { name: "brandImage", label: "Brand Logo", type: "image" },
+      { name: "brandName", label: "Brand Name", type: "text" },
+    ]
   }
+  
 
 }

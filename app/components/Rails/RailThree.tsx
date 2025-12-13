@@ -74,22 +74,25 @@ export default function RailThree({ rail }) {
   return (
     <section
       id="brands-section"
-      className="py-16 px-6 md:px-10 bg-[#f3e9dd]"
+      className="py-20 px-6 md:px-10 lg:px-16 bg-zinc-950"
     >
       <div className="max-w-7xl mx-auto">
         {/* TITLE */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#3d2b1f] drop-shadow">
-            {rail.rail_name || "Brands we worked with"}
+        <div className="text-center mb-16">
+          {/* Red accent line */}
+          <div className="w-16 h-1 bg-red-600 mx-auto mb-6"></div>
+          
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            {rail.rail_name || "Brands We Worked With"}
           </h2>
-          <p className="text-[#6d5b4d] mt-2">
+          <p className="text-gray-400 text-lg">
             Trusted by leading brands and creators.
           </p>
         </div>
 
         {/* MAIN CAROUSEL */}
         <div
-          className="relative w-full h-72 md:h-80 flex items-center justify-center overflow-hidden"
+          className="relative w-full h-80 md:h-96 flex items-center justify-center overflow-hidden"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -102,7 +105,7 @@ export default function RailThree({ rail }) {
                 key={i}
                 className="absolute transition-all duration-700 ease-out flex flex-col items-center"
                 style={{
-                  opacity: pos === "hidden" ? 0 : isCenter ? 1 : 0.5,
+                  opacity: pos === "hidden" ? 0 : isCenter ? 1 : 0.4,
                   zIndex: isCenter ? 40 : 20,
                   transform: isMobile
                     ? `translateX(${100 * (i - index)}%) scale(${
@@ -119,27 +122,39 @@ export default function RailThree({ rail }) {
               >
                 {/* LOGO CARD */}
                 <div
-                  className={`relative p-6 md:p-8 rounded-2xl shadow-xl bg-[#1d130f]/80 border border-[#6d5b4d]/40 backdrop-blur-md ${
-                    isCenter ? "scale-105" : ""
-                  } transition-all duration-500`}
+                  className={`relative p-8 md:p-10 rounded-xl bg-zinc-900 border transition-all duration-500 ${
+                    isCenter 
+                      ? "border-red-600 shadow-2xl shadow-red-600/20 scale-105" 
+                      : "border-gray-800 shadow-xl"
+                  }`}
                 >
+                  {/* Red glow effect for center card */}
+                  {isCenter && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 via-transparent to-transparent rounded-xl pointer-events-none"></div>
+                  )}
+                  
                   <img
                     src={item.brandImage}
                     alt={item.brandName}
-                    className="w-28 h-28 md:w-32 md:h-32 object-contain"
+                    className="w-32 h-32 md:w-40 md:h-40 object-contain relative z-10"
                   />
                 </div>
 
                 {/* BRAND NAME */}
                 <p
-                  className={`mt-4 font-bold transition-all text-center ${
+                  className={`mt-6 font-bold transition-all text-center ${
                     isCenter
-                      ? "text-[#3d2b1f] text-xl md:text-2xl"
-                      : "text-[#6d5b4d]"
+                      ? "text-white text-xl md:text-2xl"
+                      : "text-gray-500 text-lg"
                   }`}
                 >
                   {item.brandName}
                 </p>
+
+                {/* Decorative line under active brand */}
+                {isCenter && (
+                  <div className="w-12 h-0.5 bg-red-600 mt-2"></div>
+                )}
               </div>
             );
           })}
@@ -149,32 +164,49 @@ export default function RailThree({ rail }) {
             <>
               <button
                 onClick={prev}
-                className="absolute left-2 md:left-6 w-12 h-12 bg-[#e8d5c4] text-[#3d2b1f] rounded-full shadow-md text-xl flex items-center justify-center hover:bg-[#dac8b8] transition"
+                className="absolute left-2 md:left-6 w-14 h-14 bg-zinc-900 border border-gray-700 text-white rounded-md shadow-xl flex items-center justify-center hover:bg-red-600 hover:border-red-600 transition-all duration-300 z-50"
               >
-                ←
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
 
               <button
                 onClick={next}
-                className="absolute right-2 md:right-6 w-12 h-12 bg-[#e8d5c4] text-[#3d2b1f] rounded-full shadow-md text-xl flex items-center justify-center hover:bg-[#dac8b8] transition"
+                className="absolute right-2 md:right-6 w-14 h-14 bg-zinc-900 border border-gray-700 text-white rounded-md shadow-xl flex items-center justify-center hover:bg-red-600 hover:border-red-600 transition-all duration-300 z-50"
               >
-                →
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </>
           )}
         </div>
 
         {/* DOT INDICATORS */}
-        <div className="flex justify-center gap-2 mt-8">
+        <div className="flex justify-center gap-3 mt-12">
           {items.map((_, i) => (
-            <div
+            <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-3 h-3 rounded-full cursor-pointer transition ${
-                index === i ? "bg-[#3d2b1f]" : "bg-[#3d2b1f]/30"
+              className={`h-2 rounded-full cursor-pointer transition-all duration-300 ${
+                index === i 
+                  ? "bg-red-600 w-8" 
+                  : "bg-gray-700 w-2 hover:bg-gray-600"
               }`}
+              aria-label={`Go to slide ${i + 1}`}
             />
           ))}
+        </div>
+
+        {/* Optional: Progress bar */}
+        <div className="max-w-md mx-auto mt-8">
+          <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-300 ease-linear"
+              style={{ width: `${((index + 1) / items.length) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
     </section>

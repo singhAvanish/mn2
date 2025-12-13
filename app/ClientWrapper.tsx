@@ -4,6 +4,8 @@ import { SessionProvider } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Navbar from "./components/Navbar";
 import AboutUs from "./components/AboutUs";
+import HeroSection from "./components/HeroSection";
+import Footer from "./components/Footer";
 
 export default function ClientWrapper({
   children,
@@ -18,11 +20,17 @@ export default function ClientWrapper({
       {!isAdmin && (
         <>
           <Navbar></Navbar>
-          <AboutUs></AboutUs>
+          <HeroSection></HeroSection>
         </>
       )}
 
       <SessionProvider>{children}</SessionProvider>
+      {!isAdmin && (
+        <>
+        <AboutUs></AboutUs>
+        <Footer></Footer>
+        </>
+        )}
     </>
   );
 }
