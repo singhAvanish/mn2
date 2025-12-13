@@ -1,0 +1,136 @@
+/* ============================================
+   GLOBAL CINEMATIC DESIGN SYSTEM
+   Warm Brown + Cream Theme
+   ============================================ */
+
+/* ---------- COLORS ---------- */
+:root {
+  --cream: #f4efe7;
+  --cream-soft: #f8f5f1;
+  --brown-dark: #1b1713;
+  --brown-mid: #3a2f28;
+  --brown-light: #6d5c50;
+  --gold-warm: #c8a57a;
+  --gold-soft: #e3c08f;
+  --white-dim: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- GLOBAL BACKGROUND ---------- */
+body {
+  background: var(--cream-soft);
+  color: var(--brown-dark);
+  font-family: "Inter", sans-serif;
+}
+
+/* ---------- FILM GRAIN ---------- */
+.film-grain {
+  position: relative;
+}
+
+.film-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,\
+    <svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' opacity='0.9'>\
+      <filter id='grain'>\
+        <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/>\
+      </filter>\
+      <rect width='100%' height='100%' filter='url(%23grain)'/>\
+    </svg>");
+  animation: grainMove 0.25s steps(2) infinite;
+}
+
+@keyframes grainMove {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-10px, -15px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes softScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fade-up { animation: fadeUp 0.8s ease-out forwards; }
+.fade-in { animation: fadeIn 0.7s ease-out forwards; }
+.scale-in { animation: softScale 0.6s ease-out forwards; }
+
+/* ---------- CINEMATIC BORDER ---------- */
+.cine-border {
+  position: relative;
+}
+
+.cine-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--gold-warm), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* ---------- GOLD HOVER GLOW ---------- */
+.hover-gold:hover {
+  box-shadow: 0 0 24px var(--gold-soft);
+  transition: 0.3s ease;
+}
+
+/* ---------- TEXT SHADOW ---------- */
+.text-cine {
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+.cine-title {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--brown-dark);
+}
+
+.cine-subtitle {
+  font-size: clamp(1.1rem, 1.7vw, 1.4rem);
+  color: var(--brown-light);
+  line-height: 1.6;
+}
+
+/* ---------- SECTION SPACING ---------- */
+.section {
+  padding: clamp(3rem, 5vw, 6rem) 1rem;
+}
+
+/* ---------- VIDEO OVERLAY ---------- */
+.video-vignette::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.5));
+  pointer-events: none;
+}
+
+/* ---------- GRID HOVER ---------- */
+.thumb-hover:hover img {
+  transform: scale(1.1);
+}
+
+.thumb-hover img {
+  transition: transform 0.5s ease;
+}

@@ -1,4 +1,11 @@
-export default function AdminDashboard() {
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
+export default async function AdminDashboard() {
+  const session = await auth();
+
+  if (!session) redirect("/admin/login");
+
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>

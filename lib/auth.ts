@@ -1,25 +1,35 @@
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { connectDB } from "./mongodb";
-import Admin from "./models/Admin";
+import { connectDB } from "@/lib/mongodb";
+import Admin from "@/lib/models/Admin";
 import bcrypt from "bcrypt";
 
-export const authOptions = {
+export const { auth, signIn, signOut, handlers } = NextAuth({
+  session: { strategy: "jwt" },
+
   providers: [
     Credentials({
-      name: "Credentials",
-      credentials: { email: {}, password: {} },
-
-      async authorize(credentials: any) {
+      async authorize({ email, password }) {
         await connectDB();
-        const admin = await Admin.findOne({ email: credentials.email });
+
+        const admin = await Admin.findOne({ email });
         if (!admin) return null;
 
-        const isValid = await bcrypt.compare(credentials.password, admin.password);
-        if (!isValid) return null;
+        // Compare entered password with hashed password
+        const ok = await bcrypt.compare(password, admin.password);
+        if (!ok) return null;
 
-        return { id: admin._id, email: admin.email };
+        return {
+          id: admin._id.toString(),
+          email: admin.email,
+        };
       },
     }),
   ],
-  session: { strategy: "jwt" },
-};
+
+  pages: {
+    signIn: "/admin/login",
+  },
+
+  secret: process.env.NEXTAUTH_SECRET,
+});

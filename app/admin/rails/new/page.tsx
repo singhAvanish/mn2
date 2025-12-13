@@ -1,44 +1,96 @@
 "use client";
 
-import { useState } from "react";
-import { railTypes } from "@/lib/railTypes";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { railTypes } from "@/lib/railTypes";
+import {
+  uploadImageToCloud,
+  uploadMultipleImages,
+} from "@/lib/uploadToCloudinary";
 
 export default function CreateRail() {
   const router = useRouter();
 
+  const [existingRails, setExistingRails] = useState([]);
   const [railPos, setRailPos] = useState("");
   const [railName, setRailName] = useState("");
   const [items, setItems] = useState([]);
 
-  const addItem = () => {
-    const pos = Number(railPos);
-    const template = {};
+  // Fetch rails
+  useEffect(() => {
+    fetch("/api/rails")
+      .then((res) => res.json())
+      .then((data) => setExistingRails(data));
+  }, []);
 
-    railTypes[pos].itemFields.forEach((f) => {
+  // Check if a rail of same position already exists
+  const railExists = (pos) =>
+    existingRails.some((r) => Number(r.rail_pos) === Number(pos));
+
+  // When a rail type is selected
+  const handleRailSelect = (pos) => {
+    setRailPos(pos);
+
+    const found = existingRails.find(
+      (r) => Number(r.rail_pos) === Number(pos)
+    );
+
+    if (found) {
+      alert("Rail already exists. Redirecting to edit.");
+      router.push(`/admin/rails/${found._id}/edit`);
+    }
+  };
+
+  // Add item block
+  const addItem = () => {
+    const template = {};
+    railTypes[railPos].itemFields.forEach((f) => {
       template[f.name] = f.type === "image-array" ? [] : "";
     });
-
     setItems((prev) => [...prev, template]);
   };
 
-  const updateItem = (index, field, value) => {
-    const updated = [...items];
-    updated[index][field] = value;
-    setItems(updated);
+  // ⭐ FIXED: Safe, merge-based updateItem
+  const updateItem = (index, key, value) => {
+    setItems((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...(updated[index] || {}),
+        [key]: value,
+      };
+      return updated;
+    });
   };
 
-  const removeItem = (index) => {
+  // Delete item
+  const deleteItem = (index) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Submit
+  const handleSubmit = async () => {
+    console.log("ITEMS BEFORE SANITIZE:", items);
+
+    // ⭐ SANITIZE DATA: remove empty strings, empty arrays
+    const sanitized = items.map((item) => {
+      const clean = {};
+      for (const key in item) {
+        const val = item[key];
+
+        if (typeof val === "string" && val.trim() === "") continue;
+        if (Array.isArray(val) && val.length === 0) continue;
+
+        clean[key] = val;
+      }
+      return clean;
+    });
+
+    console.log("SENDING TO DB:", sanitized);
 
     const payload = {
       rail_pos: Number(railPos),
       rail_name: railName,
-      rail_items: items,
+      rail_items: sanitized,
     };
 
     const res = await fetch("/api/rails", {
@@ -48,60 +100,80 @@ export default function CreateRail() {
     });
 
     if (res.ok) {
-      alert("Rail created successfully!");
+      alert("Rail created");
       router.push("/admin/rails");
-    } else {
-      alert("Failed to create rail.");
     }
   };
 
+  // Render a field
   const renderField = (field, index) => {
-    const val = items[index][field.name];
+    const value = items[index][field.name];
 
+    // Text Input
     if (field.type === "text") {
       return (
         <input
-          type="text"
           className="border p-2 w-full"
-          value={val}
+          value={value}
           onChange={(e) => updateItem(index, field.name, e.target.value)}
         />
       );
     }
 
+    // Single Image Upload
     if (field.type === "image") {
       return (
         <>
           <input
             type="file"
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              const url = URL.createObjectURL(file);
+
+              const url = await uploadImageToCloud(file);
+
+              if (!url) return;
+
               updateItem(index, field.name, url);
             }}
           />
-          {val && <img src={val} className="w-24 h-24 mt-2" />}
+
+          {value && (
+            <img
+              src={value}
+              className="w-24 h-24 mt-2 rounded object-cover shadow"
+            />
+          )}
         </>
       );
     }
 
+    // Multiple Images Upload
     if (field.type === "image-array") {
       return (
         <>
           <input
             type="file"
             multiple
-            onChange={(e) => {
-              const files = e.target.files;
-              if (!files) return;
-              const arr = Array.from(files).map((f) => URL.createObjectURL(f));
-              updateItem(index, field.name, arr);
+            onChange={async (e) => {
+              const files = Array.from(e.target.files) as File[];
+              if (files.length === 0) return;
+
+              const urls = await uploadMultipleImages(files);
+
+              if (urls.length > 0) {
+                updateItem(index, field.name, urls);
+              }
             }}
           />
+
           <div className="grid grid-cols-3 gap-2 mt-2">
-            {val?.map((img, i) => (
-              <img key={i} src={img} className="w-20 h-20 object-cover" />
+            {value?.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="w-20 h-20 rounded object-cover shadow"
+              />
             ))}
           </div>
         </>
@@ -109,85 +181,85 @@ export default function CreateRail() {
     }
   };
 
+  const availableRailTypes = Object.keys(railTypes).filter(
+    (pos) => !railExists(pos)
+  );
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Create Rail (with items)</h1>
+      <h1 className="text-2xl font-bold">Create Rail</h1>
 
-      {/* SELECT RAIL TYPE */}
-      <label className="font-medium">Rail Type</label>
+      {/* Rail type selection */}
       <select
-        className="border p-2 w-full mt-2"
         value={railPos}
-        onChange={(e) => {
-          setRailPos(e.target.value);
-          setItems([]);
-        }}
+        className="border p-2 w-full mt-4"
+        onChange={(e) => handleRailSelect(e.target.value)}
       >
-        <option value="">Select Type</option>
-        {Object.keys(railTypes).map((k) => (
-          <option key={k} value={k}>
-            {railTypes[k].label}
+        <option value="">Select Rail Type</option>
+
+        {availableRailTypes.map((pos) => (
+          <option key={pos} value={pos}>
+            {railTypes[pos].label}
           </option>
         ))}
       </select>
 
-      {/* RAIL NAME */}
-      {railPos && (
+      {/* If rail not created already */}
+      {railPos && !railExists(railPos) && (
         <>
+          {/* Rail Name */}
           <div className="mt-4">
             <label className="font-medium">Rail Name</label>
             <input
-              className="border p-2 w-full mt-1"
+              className="border p-2 w-full"
               value={railName}
               onChange={(e) => setRailName(e.target.value)}
             />
           </div>
 
-          {/* ITEMS */}
-          <div className="mt-6">
-            <div className="flex justify-between">
-              <h2 className="text-lg font-semibold">Items</h2>
+          {/* Items */}
+          <div className="flex justify-between mt-6 mb-3">
+            <h2 className="text-xl font-semibold">Items</h2>
+            <button
+              className="bg-green-600 text-white px-3 py-1 rounded"
+              onClick={addItem}
+            >
+              + Add Item
+            </button>
+          </div>
 
-              <button
-                type="button"
-                onClick={addItem}
-                className="px-3 py-1 bg-green-600 text-white rounded"
-              >
-                ➕ Add Item
-              </button>
-            </div>
+          {items.map((item, index) => (
+            <div
+              key={index}
+              className="border p-4 mb-4 bg-gray-50 rounded shadow"
+            >
+              <div className="flex justify-between mb-2">
+                <strong>Item #{index + 1}</strong>
 
-            <div className="mt-4 space-y-6">
-              {items.map((item, index) => (
-                <div key={index} className="border p-4 rounded bg-gray-50">
-                  <div className="flex justify-between">
-                    <h3 className="font-semibold">Item #{index + 1}</h3>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(index)}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                <button
+                  className="text-red-600"
+                  onClick={() => deleteItem(index)}
+                >
+                  Delete
+                </button>
+              </div>
 
-                  {railTypes[railPos].itemFields.map((field) => (
-                    <div key={field.name} className="mt-3">
-                      <label className="font-medium">{field.label}</label>
-                      <div className="mt-1">{renderField(field, index)}</div>
-                    </div>
-                  ))}
+              {railTypes[railPos].itemFields.map((field) => (
+                <div key={field.name} className="mb-4">
+                  <label className="font-medium">{field.label}</label>
+                  {renderField(field, index)}
                 </div>
               ))}
             </div>
+          ))}
 
-            <button
-              onClick={handleSubmit}
-              className="mt-6 px-4 py-2 bg-black text-white rounded"
-            >
-              Create Rail
-            </button>
-          </div>
+          {/* Submit */}
+          <button
+            className="mt-6 px-6 py-2 bg-black text-white rounded"
+            onClick={handleSubmit}
+          >
+            Create Rail
+          </button>
         </>
       )}
     </div>
