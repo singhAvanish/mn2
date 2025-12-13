@@ -16,8 +16,13 @@ export async function GET() {
         { status: 400 }
       );
     }
+    const AdminModel = Admin as unknown as {
+  findOne: (query: any) => Promise<any>;
+  create: (data: any) => Promise<any>;
+};
 
-    const exists = await Admin.findOne({ email });
+
+    const exists = await AdminModel.findOne({ email });
 
     if (exists) {
       return NextResponse.json({ message: "Admin already exists" });
@@ -25,7 +30,7 @@ export async function GET() {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    await Admin.create({
+    await AdminModel.create({
       email,
       password: hashed,
     });

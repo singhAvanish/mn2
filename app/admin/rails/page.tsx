@@ -3,13 +3,33 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+/** ---- TYPES ---- */
+interface RailItem {
+  [key: string]: any;
+}
+
+interface Rail {
+  _id: string;
+  rail_name: string;
+  rail_pos: number | string;
+  rail_items: RailItem[];
+}
+
 export default function RailsPage() {
-  const [rails, setRails] = useState([]);
+  const [rails, setRails] = useState<Rail[]>([]);
 
   useEffect(() => {
-    fetch("/api/rails")
-      .then((res) => res.json())
-      .then((data) => setRails(data));
+    async function load() {
+      try {
+        const res = await fetch("/api/rails");
+        const data = await res.json();
+        setRails(data);
+      } catch (err) {
+        console.error("Failed to load rails:", err);
+      }
+    }
+
+    load();
   }, []);
 
   return (
@@ -24,7 +44,6 @@ export default function RailsPage() {
       </Link>
 
       <div className="mt-6 space-y-4">
-
         {rails.map((rail) => (
           <div key={rail._id} className="border p-4 rounded bg-gray-50">
             <h2 className="text-xl font-semibold">
@@ -52,7 +71,6 @@ export default function RailsPage() {
             </div>
           </div>
         ))}
-
       </div>
     </div>
   );

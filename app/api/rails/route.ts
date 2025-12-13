@@ -2,46 +2,64 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Rail from "@/lib/models/Rail";
 
-// GET ALL RAILS (only one GET allowed)
+/* ----------------------------
+   TypeScript-safe Mongoose model
+----------------------------- */
+const RailModel = Rail as unknown as {
+  find: (query?: any) => Promise<any[]>;
+  findById: (id: string) => Promise<any>;
+  create: (data: any) => Promise<any>;
+};
+
+/* --------------------------------------
+   GET — Fetch all rails
+   (validated by Next.js route checker)
+--------------------------------------- */
 export async function GET() {
   await connectDB();
-  const rails = await Rail.find().sort({ rail_pos: 1 }); // sorted
+
+  const rails = await RailModel.find({}).then((res) =>
+    // Avoid TS issue when `.sort()` is chained
+    res.sort((a, b) => Number(a.rail_pos) - Number(b.rail_pos))
+  );
+
   return NextResponse.json(rails);
 }
 
-// CREATE NEW RAIL
-export async function POST(req) {
+/* --------------------------------------
+   POST — Create new rail
+--------------------------------------- */
+export async function POST(req: Request) {
   await connectDB();
-  const body = await req.json();
 
-  const sanitizedItems =
-    (body.rail_items || []).map(item => {
-      const cleaned = {};
+  let body: any = {};
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
-      for (const key in item) {
-        const val = item[key];
+  /* Sanitize Items (remove empty strings / arrays) */
+  const sanitizedItems = (body.rail_items || []).map(
+    (item: Record<string, any>) => {
+      const clean: Record<string, any> = {};
 
-        // remove empty strings in image fields
-        if (typeof val === "string" && val.trim() === "") continue;
-
-        // remove empty image arrays
+      for (const [key, val] of Object.entries(item)) {
+        if (typeof val === "string" && !val.trim()) continue;
         if (Array.isArray(val) && val.length === 0) continue;
-
-        cleaned[key] = val;
+        clean[key] = val;
       }
 
-      return cleaned;
-    });
+      return clean;
+    }
+  );
 
-  const newRail = await Rail.create({
+  const newRail = await RailModel.create({
     rail_pos: Number(body.rail_pos),
     rail_name: body.rail_name,
     rail_items: sanitizedItems,
-    orderIndex: 0
+    orderIndex: 0,
   });
 
   return NextResponse.json(newRail);
 }
-
-
-

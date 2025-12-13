@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -10,29 +10,39 @@ cloudinary.config({
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file") as File | null;
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // convert file → buffer
+    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // upload to cloudinary
-    const uploaded = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream({ folder: "rails" }, (err, result) => {
-        if (err) reject(err);
-        resolve(result);
-      }).end(buffer);
-    });
+    // Upload using upload_stream with proper TS typing
+    const uploaded: UploadApiResponse = await new Promise(
+      (resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "rails" },
+          (error: UploadApiErrorResponse | null, result: UploadApiResponse | undefined) => {
+            if (error) return reject(error);
+            if (!result) return reject(new Error("Upload failed — empty result"));
+            resolve(result);
+          }
+        );
+        stream.end(buffer);
+      }
+    );
 
     return NextResponse.json({
       url: uploaded.secure_url,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("UPLOAD ERROR:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Upload failed" },
+      { status: 500 }
+    );
   }
 }

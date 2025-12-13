@@ -5,7 +5,11 @@ import Rail from "@/lib/models/Rail";
 export async function POST(req, { params }) {
   await connectDB();
   const body = await req.json(); // item object
-  const rail = await Rail.findById(params.id);
+       const RailModel = Rail as unknown as {
+      findById: (query: any) => Promise<any>;
+      create: (data: any) => Promise<any>;
+    };
+  const rail = await RailModel.findById(params.id);
   if (!rail) return NextResponse.json({ error: "rail not found" }, { status: 404 });
 
   rail.rail_items.push(body);

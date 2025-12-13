@@ -68,26 +68,26 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+  const result = await signIn("credentials", {
+    redirect: false,
+    email,
+    password,
+  });
 
+  if (result?.error) {
+    setError("Invalid credentials");
     setLoading(false);
+    return;
+  }
 
-    if (result?.error) {
-      setError("Invalid email or password");
-      return;
-    }
+  window.location.href = "/admin/dashboard";
+};
 
-    window.location.href = "/admin/dashboard";
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">

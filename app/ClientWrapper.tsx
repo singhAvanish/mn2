@@ -1,21 +1,28 @@
 "use client";
 
+import { SessionProvider } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Navbar from "./components/Navbar";
 import AboutUs from "./components/AboutUs";
-import { SessionProvider } from "next-auth/react";
 
-export default function ClientWrapper({ children }) {
+export default function ClientWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-
   const isAdmin = pathname.startsWith("/admin");
 
   return (
     <>
-      {/* Show global components only on non-admin pages */}
-      {!isAdmin && <Navbar />}
+      {!isAdmin && (
+        <>
+          <Navbar></Navbar>
+          <AboutUs></AboutUs>
+        </>
+      )}
+
       <SessionProvider>{children}</SessionProvider>
-      {!isAdmin && <AboutUs />}
     </>
   );
 }
