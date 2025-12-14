@@ -12,6 +12,7 @@ export const railTypes: Record<number, any> = {
     label: "Category Rail (buttonImage + images array)",
     itemFields: [
       { name: "buttonImage", label: "Button Image (thumbnail)", type: "image" },
+      // {name:"eventName", label:"Event name",type:"text"},
       { name: "images", label: "Category Images (multiple)", type: "image-array" }
     ],
   },

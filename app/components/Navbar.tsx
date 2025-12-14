@@ -9,7 +9,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 w-full bg-black/40 backdrop-blur-md text-white px-6 md:px-10 py-4 flex items-center justify-between z-50">
       
       {/* BRAND */}
-      <h1 className="text-2xl font-bold tracking-tight">Cinematic.</h1>
+      <h1 className="text-2xl font-bold tracking-tight">MANGO MULTIMEDIA</h1>
 
       {/* DESKTOP MENU */}
       <div className="hidden md:flex gap-10 text-lg">

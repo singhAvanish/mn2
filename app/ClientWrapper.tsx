@@ -16,13 +16,19 @@ export default function ClientWrapper({
   return (
     <>
       {!isAdmin && (
-        <>
+    
           <Navbar></Navbar>
-          <AboutUs></AboutUs>
-        </>
+         
+        
       )}
 
       <SessionProvider>{children}</SessionProvider>
+      {!isAdmin && (
+        
+          
+          <AboutUs></AboutUs>
+        
+      )}
     </>
   );
 }
