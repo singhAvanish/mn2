@@ -1,35 +1,48 @@
 import { NextResponse } from "next/server";
-import Admin from "@/lib/models/Admin";
 import { connectDB } from "@/lib/mongodb";
+import Admin from "@/lib/models/Admin";
 import nodemailer from "nodemailer";
 
-export async function POST() {
-  await connectDB();
+export async function POST(req: Request) {
+  try {
+    await connectDB();
 
-  const admin = await Admin.findOne();
-  if (!admin) return NextResponse.json({ error: "Admin not found" }, { status: 404 });
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiry = new Date(Date.now() + 10 * 60 * 1000);
-
-  admin.otp = otp;
-  admin.otpExpiresAt = expiry;
-  await admin.save();
-
-  // EMAIL TRANSPORT
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+    const { email } = await req.json();
+    if (!email) {
+      return NextResponse.json({ error: "Email required" }, { status: 400 });
     }
-  });
 
-  await transporter.sendMail({
-    to: admin.email,
-    subject: "Your OTP Code",
-    text: `Your OTP is ${otp}. It expires in 10 minutes.`
-  });
+    const AdminModel = Admin as any;
+    const admin = await AdminModel.findOne({ email });
 
-  return NextResponse.json({ success: true });
+    if (!admin) {
+      return NextResponse.json({ error: "Admin not found" }, { status: 404 });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    admin.otp = otp;
+    admin.otpExpiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    await admin.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      to: admin.email,
+      subject: "Admin Password Reset OTP",
+      text: `Your OTP is ${otp}. It expires in 10 minutes.`,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("REQUEST OTP ERROR:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
 }

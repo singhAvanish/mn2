@@ -1,13 +1,19 @@
 // "use client";
 
-// import { useState, useRef, useEffect } from "react";
+// import { useState, useRef, useEffect, useMemo } from "react";
 
-// export default function RailTwo({ rail }) {
-//   const [activeCategory, setActiveCategory] = useState(null);
+// export default function RailTwo({ rail }: any) {
+//   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 //   const [activeIndex, setActiveIndex] = useState(0);
 //   const [modalOpen, setModalOpen] = useState(false);
 
-//   const openModal = (idx) => {
+//   const railRef = useRef<HTMLDivElement | null>(null);
+//   const modalRef = useRef<HTMLDivElement | null>(null);
+
+//   const items = rail?.rail_items || [];
+
+//   const openModal = (idx: number) => {
+//     if (!items.length) return;
 //     setActiveCategory(idx);
 //     setActiveIndex(0);
 //     setModalOpen(true);
@@ -18,69 +24,85 @@
 //     setModalOpen(false);
 //     setActiveCategory(null);
 //     document.body.style.overflow = "auto";
+
+//     // exit fullscreen if open
+//     if (document.fullscreenElement) {
+//       document.exitFullscreen?.().catch(() => {});
+//     }
 //   };
 
 //   return (
-//     <section id="work-section" className="py-16 px-6 md:px-10 bg-[#f3e9dd]">
-//       {/* Title */}
-//       <div className="text-center mb-10">
-//         <h2 className="text-4xl md:text-5xl font-extrabold text-[#3d2b1f] drop-shadow">
-//           {rail.rail_name}
-//         </h2>
-//         <p className="mt-2 text-[#6d5b4d]">
-//           A curated collection of our finest cinematic work.
-//         </p>
+//     <section className="py-20 px-6 bg-white">
+//       <div className="text-center mb-16">
+//         <h2 className="text-5xl font-bold text-black">{rail?.rail_name}</h2>
 //       </div>
 
-//       {/* GRID */}
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-//         {rail.rail_items?.map((item, idx) => (
+//       {/* ✅ NO DUPLICATE */}
+//       <div
+//         ref={railRef}
+//         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto"
+//       >
+//         {items.map((item: any, idx: number) => (
 //           <div
 //             key={idx}
 //             onClick={() => openModal(idx)}
-//             className="relative cursor-pointer rounded-xl overflow-hidden shadow-lg bg-[#1d130f] group"
+//             className="relative cursor-pointer rounded-lg overflow-hidden bg-zinc-900"
 //           >
-//             <img
-//               src={item.buttonImage}
-//               className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
-//             />
-
-//             {/* Gradient Overlay */}
-//             <div className="absolute inset-0 bg-gradient-to-t from-[#1d130f] via-transparent to-transparent opacity-70 group-hover:opacity-50 transition" />
-
-//             {/* Title Overlay */}
-//             <div className="absolute bottom-4 left-4 text-[#f6efe7] drop-shadow-lg">
-//               <h3 className="text-xl font-bold">{item.title || "Gallery"}</h3>
-//               <p className="text-sm text-[#f6efe7]/70">Tap to view →</p>
-//             </div>
+//             <img src={item.buttonImage} className="w-full h-72 object-cover" alt="" />
 //           </div>
 //         ))}
 //       </div>
 
-//       {/* MODAL */}
 //       {modalOpen && activeCategory !== null && (
-//         <GalleryModal
-//           category={rail.rail_items[activeCategory]}
-//           activeIndex={activeIndex}
-//           setActiveIndex={setActiveIndex}
-//           onClose={closeModal}
-//         />
+//         <div
+//           ref={modalRef}
+//           className="fixed inset-0 z-50 flex items-center justify-center"
+//         >
+//           {/* overlay + blur */}
+//           <div className="absolute inset-0 bg-black/70" onClick={closeModal} />
+//           <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-400/20" />
+
+//           {/* close */}
+//           <button
+//             onClick={closeModal}
+//             className="absolute top-6 right-6 z-10 h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center"
+//             aria-label="Close"
+//           >
+//             ✕
+//           </button>
+
+//           <ModalBody
+//             category={items[activeCategory]}
+//             activeIndex={activeIndex}
+//             setActiveIndex={setActiveIndex}
+//             modalRef={modalRef}
+//           />
+//         </div>
 //       )}
 //     </section>
 //   );
 // }
 
-// /* -----------------------------------------------------------
-//    GALLERY MODAL (Warm Brown + Cream Cinematic)
-// ----------------------------------------------------------- */
-// function GalleryModal({ category, activeIndex, setActiveIndex, onClose }) {
-//   const images = category.images || [];
-//   const [touchStart, setTouchStart] = useState(0);
-//   const [fade, setFade] = useState(true);
+// /* ================= MODAL BODY (inside same file) ================= */
 
+// function ModalBody({
+//   category,
+//   activeIndex,
+//   setActiveIndex,
+//   modalRef,
+// }: any) {
+//   // ⭐ flatten nested arrays safely
+//   const images: string[] = (category?.images || []).flat();
+
+//   // ✅ NEW: start with uniform aspect ratio; click => real aspect ratio
+//   const [viewMode, setViewMode] = useState<"uniform" | "real">("uniform");
+//   const [isFullscreen, setIsFullscreen] = useState(false);
+
+//   const caption = category?.name || category?.title || category?.label || "";
+
+//   // when image changes, reset to uniform view
 //   useEffect(() => {
-//     setFade(false);
-//     setTimeout(() => setFade(true), 40);
+//     setViewMode("uniform");
 //   }, [activeIndex]);
 
 //   const next = () => {
@@ -91,75 +113,378 @@
 //     if (activeIndex > 0) setActiveIndex(activeIndex - 1);
 //   };
 
-//   // Touch controls
-//   const handleTouchStart = (e) => setTouchStart(e.touches[0].clientX);
+//   // ESC close + arrow nav
+//   useEffect(() => {
+//     const onKey = (e: KeyboardEvent) => {
+//       if (e.key === "ArrowRight") next();
+//       if (e.key === "ArrowLeft") prev();
+//     };
+//     window.addEventListener("keydown", onKey);
+//     return () => window.removeEventListener("keydown", onKey);
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [activeIndex, images.length]);
 
-//   const handleTouchEnd = (e) => {
-//     const diff = e.changedTouches[0].clientX - touchStart;
-//     if (diff > 50) prev();
-//     if (diff < -50) next();
+//   // fullscreen change tracking
+//   useEffect(() => {
+//     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+//     document.addEventListener("fullscreenchange", onFsChange);
+//     return () => document.removeEventListener("fullscreenchange", onFsChange);
+//   }, []);
+
+//   // ✅ Behavior:
+//   // 1st click => switch to real aspect ratio
+//   // 2nd click (when already real) => fullscreen toggle
+//   const handleMainClick = async () => {
+//     if (viewMode === "uniform") {
+//       setViewMode("real");
+//       return;
+//     }
+
+//     try {
+//       if (!document.fullscreenElement) {
+//         await modalRef.current?.requestFullscreen?.();
+//       } else {
+//         await document.exitFullscreen?.();
+//       }
+//     } catch {
+//       // ignore
+//     }
+//   };
+
+//   if (!images.length) return null;
+
+//   const leftIdx = activeIndex - 1;
+//   const rightIdx = activeIndex + 1;
+
+//   return (
+//     <div className="relative z-10 w-full max-w-5xl px-6">
+//       <div className="flex items-center justify-center gap-6">
+//         {/* left preview (always uniform aspect) */}
+//         <div className="hidden sm:block w-[22%]">
+//           {leftIdx >= 0 && (
+//             <button
+//               onClick={prev}
+//               className="w-full rounded-2xl overflow-hidden opacity-70 hover:opacity-100 transition"
+//               aria-label="Previous"
+//             >
+//               <div className="aspect-[4/3] w-full bg-black/30">
+//                 <img
+//                   src={images[leftIdx]}
+//                   className="h-full w-full object-cover"
+//                   alt=""
+//                 />
+//               </div>
+//             </button>
+//           )}
+//         </div>
+
+//         {/* center main */}
+//         <div className="w-full sm:w-[56%]">
+//           <button
+//             onClick={handleMainClick}
+//             className="w-full rounded-2xl overflow-hidden shadow-2xl bg-black/30"
+//             aria-label="Toggle aspect/fullscreen"
+//             title={
+//               viewMode === "uniform"
+//                 ? "Click to view real aspect ratio"
+//                 : "Click again for fullscreen"
+//             }
+//           >
+//             {/* ✅ UNIFORM aspect ratio (same for all images) */}
+//             {viewMode === "uniform" ? (
+//               <div className="aspect-[4/3] w-full bg-black/20">
+//                 <img
+//                   src={images[activeIndex]}
+//                   className="h-full w-full object-cover"
+//                   alt=""
+//                 />
+//               </div>
+//             ) : (
+//               /* ✅ REAL aspect ratio */
+//               <img
+//                 src={images[activeIndex]}
+//                 className={
+//                   isFullscreen
+//                     ? "w-full max-h-screen object-contain"
+//                     : "w-full max-h-[75vh] object-contain"
+//                 }
+//                 alt=""
+//               />
+//             )}
+//           </button>
+
+//           {/* helper text */}
+//           <div className="mt-2 text-center text-white/50 text-xs">
+//             {viewMode === "uniform"
+//               ? "Click image to view real aspect ratio"
+//               : "Click again for fullscreen"}
+//           </div>
+//         </div>
+
+//         {/* right preview (always uniform aspect) */}
+//         <div className="hidden sm:block w-[22%]">
+//           {rightIdx < images.length && (
+//             <button
+//               onClick={next}
+//               className="w-full rounded-2xl overflow-hidden opacity-70 hover:opacity-100 transition"
+//               aria-label="Next"
+//             >
+//               <div className="aspect-[4/3] w-full bg-black/30">
+//                 <img
+//                   src={images[rightIdx]}
+//                   className="h-full w-full object-cover"
+//                   alt=""
+//                 />
+//               </div>
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* caption */}
+//       {caption ? (
+//         <div className="mt-4 text-center text-white/90 text-sm">{caption}</div>
+//       ) : null}
+
+//       {/* bottom arrows */}
+//       <div className="mt-6 flex items-center justify-center gap-4">
+//         <button
+//           onClick={prev}
+//           disabled={activeIndex === 0}
+//           className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 disabled:opacity-40 disabled:hover:bg-white/10 flex items-center justify-center"
+//           aria-label="Previous image"
+//         >
+//           ‹
+//         </button>
+
+//         <button
+//           onClick={next}
+//           disabled={activeIndex === images.length - 1}
+//           className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 disabled:opacity-40 disabled:hover:bg-white/10 flex items-center justify-center"
+//           aria-label="Next image"
+//         >
+//           ›
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+// "use client";
+
+// import { useState, useRef, useEffect } from "react";
+
+// export default function RailTwo({ rail }: any) {
+//   const [activeCategory, setActiveCategory] = useState<number | null>(null);
+//   const [activeIndex, setActiveIndex] = useState(0);
+//   const [modalOpen, setModalOpen] = useState(false);
+
+//   const railRef = useRef<HTMLDivElement | null>(null);
+//   const modalRef = useRef<HTMLDivElement | null>(null);
+
+//   const items = rail?.rail_items || [];
+
+//   const openModal = (idx: number) => {
+//     if (!items.length) return;
+//     setActiveCategory(idx);
+//     setActiveIndex(0);
+//     setModalOpen(true);
+//     document.body.style.overflow = "hidden";
+//   };
+
+//   const closeModal = () => {
+//     setModalOpen(false);
+//     setActiveCategory(null);
+//     document.body.style.overflow = "auto";
+//     if (document.fullscreenElement) {
+//       document.exitFullscreen?.().catch(() => {});
+//     }
 //   };
 
 //   return (
-//     <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-//       {/* Close Button */}
-//       <button
-//         className="absolute top-6 right-6 text-[#f6efe7] text-3xl bg-[#2b1d16]/70 w-12 h-12 rounded-full flex items-center justify-center hover:bg-[#2b1d16]/90 transition"
-//         onClick={onClose}
+//     <section id="work-section" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-[#f8f8f8]">
+//       <div className="text-center mb-10 sm:mb-14 md:mb-16">
+//         <div className="w-10 sm:w-12 md:w-16 h-1 bg-red-600 mx-auto mb-4 sm:mb-6"></div>
+//         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#111]">
+//           {rail?.rail_name}
+//         </h2>
+//       </div>
+
+//       {/* ✅ GRID: 2 items per line on mobile */}
+//       <div
+//         ref={railRef}
+//         className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-10 max-w-7xl mx-auto"
 //       >
-//         ✕
-//       </button>
-
-//       {/* CONTENT */}
-//       <div className="w-full max-w-4xl flex flex-col items-center">
-//         {/* MAIN IMAGE */}
-//         <img
-//           src={images[activeIndex]}
-//           onTouchStart={handleTouchStart}
-//           onTouchEnd={handleTouchEnd}
-//           className={`max-h-[70vh] object-contain rounded-lg shadow-2xl transition-all duration-300 ${
-//             fade ? "opacity-100 scale-100" : "opacity-0 scale-95"
-//           }`}
-//         />
-
-//         {/* CAPTION */}
-//         <p className="text-[#f6efe7] text-lg mt-4">
-//           {activeIndex + 1} / {images.length}
-//         </p>
-
-//         {/* ARROWS */}
-//         <div className="flex gap-6 mt-6">
-//           <button
-//             onClick={prev}
-//             disabled={activeIndex === 0}
-//             className="w-12 h-12 bg-[#e8d5c4] text-[#3a271c] rounded-full text-2xl flex items-center justify-center disabled:opacity-40 shadow-lg"
+//         {items.map((item: any, idx: number) => (
+//           <div
+//             key={idx}
+//             onClick={() => openModal(idx)}
+//             className="group cursor-pointer rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition"
 //           >
-//             ←
-//           </button>
-//           <button
-//             onClick={next}
-//             disabled={activeIndex === images.length - 1}
-//             className="w-12 h-12 bg-[#e8d5c4] text-[#3a271c] rounded-full text-2xl flex items-center justify-center disabled:opacity-40 shadow-lg"
-//           >
-//             →
-//           </button>
-//         </div>
-
-//         {/* THUMBNAILS */}
-//         <div className="flex gap-3 mt-6 overflow-x-auto px-2">
-//           {images.map((img, i) => (
 //             <img
-//               key={i}
-//               src={img}
-//               onClick={() => setActiveIndex(i)}
-//               className={`w-20 h-16 object-cover rounded-lg cursor-pointer transition ${
-//                 i === activeIndex
-//                   ? "ring-2 ring-[#e8d5c4]"
-//                   : "opacity-60 hover:opacity-100"
-//               }`}
+//               src={item.buttonImage}
+//               className="w-full h-40 sm:h-56 md:h-72 object-cover transition duration-700 group-hover:scale-105"
+//               alt=""
 //             />
-//           ))}
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* MODAL */}
+//       {modalOpen && activeCategory !== null && (
+//         <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center">
+//           <div className="absolute inset-0 bg-black/70" onClick={closeModal} />
+//           <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-400/20" />
+
+//           <button
+//             onClick={closeModal}
+//             className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10 h-10 w-10 rounded-full bg-white/30 text-white hover:bg-white/40 flex items-center justify-center"
+//             aria-label="Close"
+//           >
+//             ✕
+//           </button>
+
+//           <ModalBody
+//             category={items[activeCategory]}
+//             activeIndex={activeIndex}
+//             setActiveIndex={setActiveIndex}
+//             modalRef={modalRef}
+//           />
 //         </div>
+//       )}
+//     </section>
+//   );
+// }
+
+// function ModalBody({ category, activeIndex, setActiveIndex, modalRef }: any) {
+//   const images: string[] = (category?.images || []).flat();
+//   const [viewMode, setViewMode] = useState<"uniform" | "real">("uniform");
+//   const [isFullscreen, setIsFullscreen] = useState(false);
+
+//   const caption = category?.name || category?.title || category?.label || "";
+
+//   useEffect(() => {
+//     setViewMode("uniform");
+//   }, [activeIndex]);
+
+//   const next = () => {
+//     if (activeIndex < images.length - 1) setActiveIndex(activeIndex + 1);
+//   };
+//   const prev = () => {
+//     if (activeIndex > 0) setActiveIndex(activeIndex - 1);
+//   };
+
+//   useEffect(() => {
+//     const onKey = (e: KeyboardEvent) => {
+//       if (e.key === "ArrowRight") next();
+//       if (e.key === "ArrowLeft") prev();
+//     };
+//     window.addEventListener("keydown", onKey);
+//     return () => window.removeEventListener("keydown", onKey);
+//   }, [activeIndex, images.length]);
+
+//   useEffect(() => {
+//     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+//     document.addEventListener("fullscreenchange", onFsChange);
+//     return () => document.removeEventListener("fullscreenchange", onFsChange);
+//   }, []);
+
+//   const handleMainClick = async () => {
+//     if (viewMode === "uniform") {
+//       setViewMode("real");
+//       return;
+//     }
+//     try {
+//       if (!document.fullscreenElement) {
+//         await modalRef.current?.requestFullscreen?.();
+//       } else {
+//         await document.exitFullscreen?.();
+//       }
+//     } catch {}
+//   };
+
+//   if (!images.length) return null;
+
+//   const leftIdx = activeIndex - 1;
+//   const rightIdx = activeIndex + 1;
+
+//   return (
+//     <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6">
+//       <div className="flex items-center justify-center gap-4 sm:gap-6">
+//         {/* LEFT */}
+//         <div className="hidden sm:block w-[22%]">
+//           {leftIdx >= 0 && (
+//             <button
+//               onClick={prev}
+//               className="w-full rounded-2xl overflow-hidden opacity-70 hover:opacity-100 transition"
+//             >
+//               <div className="aspect-[4/3] w-full bg-black/20">
+//                 <img src={images[leftIdx]} className="h-full w-full object-cover" alt="" />
+//               </div>
+//             </button>
+//           )}
+//         </div>
+
+//         {/* CENTER */}
+//         <div className="w-full sm:w-[56%]">
+//           <button
+//             onClick={handleMainClick}
+//             className="w-full rounded-2xl overflow-hidden shadow-2xl bg-white/10"
+//             title={viewMode === "uniform" ? "Click to view real aspect" : "Click again for fullscreen"}
+//           >
+//             {viewMode === "uniform" ? (
+//               <div className="aspect-[4/3] w-full bg-black/10">
+//                 <img src={images[activeIndex]} className="h-full w-full object-cover" alt="" />
+//               </div>
+//             ) : (
+//               <img
+//                 src={images[activeIndex]}
+//                 className={isFullscreen ? "w-full max-h-screen object-contain" : "w-full max-h-[75vh] object-contain"}
+//                 alt=""
+//               />
+//             )}
+//           </button>
+
+//           <div className="mt-2 text-center text-white/70 text-xs">
+//             {viewMode === "uniform" ? "Click image to view real aspect ratio" : "Click again for fullscreen"}
+//           </div>
+//         </div>
+
+//         {/* RIGHT */}
+//         <div className="hidden sm:block w-[22%]">
+//           {rightIdx < images.length && (
+//             <button
+//               onClick={next}
+//               className="w-full rounded-2xl overflow-hidden opacity-70 hover:opacity-100 transition"
+//             >
+//               <div className="aspect-[4/3] w-full bg-black/20">
+//                 <img src={images[rightIdx]} className="h-full w-full object-cover" alt="" />
+//               </div>
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {caption && (
+//         <div className="mt-4 text-center text-white text-sm font-medium">{caption}</div>
+//       )}
+
+//       <div className="mt-6 flex items-center justify-center gap-4">
+//         <button
+//           onClick={prev}
+//           disabled={activeIndex === 0}
+//           className="h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30 disabled:opacity-40 flex items-center justify-center"
+//         >
+//           ‹
+//         </button>
+//         <button
+//           onClick={next}
+//           disabled={activeIndex === images.length - 1}
+//           className="h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30 disabled:opacity-40 flex items-center justify-center"
+//         >
+//           ›
+//         </button>
 //       </div>
 //     </div>
 //   );
@@ -170,12 +495,18 @@
 
 import { useState, useRef, useEffect } from "react";
 
-export default function RailTwo({ rail }) {
-  const [activeCategory, setActiveCategory] = useState(null);
+export default function RailTwo({ rail }: any) {
+  const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const openModal = (idx) => {
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+
+  const items = rail?.rail_items || [];
+
+  const openModal = (idx: number) => {
+    if (!items.length) return;
     setActiveCategory(idx);
     setActiveIndex(0);
     setModalOpen(true);
@@ -186,55 +517,50 @@ export default function RailTwo({ rail }) {
     setModalOpen(false);
     setActiveCategory(null);
     document.body.style.overflow = "auto";
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
   };
 
   return (
-    <section id="work-section" className="py-20 px-6 md:px-10 lg:px-16 bg-black">
-      {/* Title */}
-      <div className="text-center mb-16 max-w-3xl mx-auto">
-        {/* Red accent line */}
-        <div className="w-16 h-1 bg-red-600 mx-auto mb-6"></div>
-        
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-          {rail.rail_name}
+    <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-[#f8f8f8]">
+      <div className="text-center mb-10 sm:mb-14 md:mb-16">
+        <div className="w-10 sm:w-12 md:w-16 h-1 bg-red-600 mx-auto mb-4 sm:mb-6"></div>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#111]">
+          {rail?.rail_name}
         </h2>
-        <p className="text-gray-400 text-lg">
-          A curated collection of our finest cinematic work.
-        </p>
       </div>
 
-      {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        {rail.rail_items?.map((item, idx) => (
+      {/* GRID (2 per row on mobile) */}
+      <div
+        ref={railRef}
+        className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-10 max-w-7xl mx-auto"
+      >
+        {items.map((item: any, idx: number) => (
           <div
             key={idx}
             onClick={() => openModal(idx)}
-            className="relative cursor-pointer rounded-lg overflow-hidden shadow-2xl bg-zinc-900 group border border-gray-800 hover:border-red-600 transition-all duration-300"
+            className="group cursor-pointer rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition"
           >
-            <img
-              src={item.buttonImage}
-              alt={item.title || "Gallery"}
-              className="w-full h-72 object-cover transition-transform duration-700 group-hover:scale-110"
-            />
+            {/* IMAGE WRAPPER */}
+            <div className="relative">
+              <img
+                src={item.buttonImage}
+                className="w-full h-40 sm:h-56 md:h-72 object-cover transition duration-700 group-hover:scale-105"
+                alt=""
+              />
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
+              {/* ✅ CINEMATIC GRADIENT OVERLAY */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
 
-            {/* Red accent on hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600/0 via-transparent to-transparent group-hover:from-red-600/20 transition-all duration-300" />
-
-            {/* Title Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <div className="w-12 h-0.5 bg-red-600 mb-3 group-hover:w-20 transition-all duration-300"></div>
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                {item.title || "Gallery"}
-              </h3>
-              <div className="flex items-center gap-2 text-gray-300 group-hover:text-red-500 transition-colors">
-                <span className="text-sm font-medium">View Project</span>
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+              {/* ✅ HEADING TEXT (like reference) */}
+              {item.heading && (
+                <div className="absolute bottom-3 left-3 right-3">
+                  <p className="text-white font-semibold tracking-wide uppercase leading-snug text-xs sm:text-sm md:text-base drop-shadow">
+                    {item.heading}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -242,168 +568,156 @@ export default function RailTwo({ rail }) {
 
       {/* MODAL */}
       {modalOpen && activeCategory !== null && (
-        <GalleryModal
-          category={rail.rail_items[activeCategory]}
-          activeIndex={activeIndex}
-          setActiveIndex={setActiveIndex}
-          onClose={closeModal}
-        />
+        <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70" onClick={closeModal} />
+          <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-400/20" />
+
+          <button
+            onClick={closeModal}
+            className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10 h-10 w-10 rounded-full bg-white/30 text-white hover:bg-white/40 flex items-center justify-center"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+
+          <ModalBody
+            category={items[activeCategory]}
+            activeIndex={activeIndex}
+            setActiveIndex={setActiveIndex}
+            modalRef={modalRef}
+          />
+        </div>
       )}
     </section>
   );
 }
 
-/* -----------------------------------------------------------
-   GALLERY MODAL (Dark Cinematic with Red Accents)
------------------------------------------------------------ */
-function GalleryModal({ category, activeIndex, setActiveIndex, onClose }) {
-  const images = category.images || [];
-  const [touchStart, setTouchStart] = useState(0);
-  const [fade, setFade] = useState(true);
+function ModalBody({ category, activeIndex, setActiveIndex, modalRef }: any) {
+  const images: string[] = (category?.images || []).flat();
+  const [viewMode, setViewMode] = useState<"uniform" | "real">("uniform");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const caption = category?.name || category?.title || category?.label || "";
 
   useEffect(() => {
-    setFade(false);
-    setTimeout(() => setFade(true), 40);
-  }, [activeIndex]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    setViewMode("uniform");
   }, [activeIndex]);
 
   const next = () => {
     if (activeIndex < images.length - 1) setActiveIndex(activeIndex + 1);
   };
-
   const prev = () => {
     if (activeIndex > 0) setActiveIndex(activeIndex - 1);
   };
 
-  // Touch controls
-  const handleTouchStart = (e) => setTouchStart(e.touches[0].clientX);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeIndex, images.length]);
 
-  const handleTouchEnd = (e) => {
-    const diff = e.changedTouches[0].clientX - touchStart;
-    if (diff > 50) prev();
-    if (diff < -50) next();
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  const handleMainClick = async () => {
+    if (viewMode === "uniform") {
+      setViewMode("real");
+      return;
+    }
+    try {
+      if (!document.fullscreenElement) {
+        await modalRef.current?.requestFullscreen?.();
+      } else {
+        await document.exitFullscreen?.();
+      }
+    } catch {}
   };
 
+  if (!images.length) return null;
+
+  const leftIdx = activeIndex - 1;
+  const rightIdx = activeIndex + 1;
+
   return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-      {/* Close Button */}
-      <button
-        className="absolute top-6 right-6 text-white text-2xl bg-zinc-900/80 backdrop-blur-sm border border-gray-700 w-12 h-12 rounded-md flex items-center justify-center hover:bg-red-600 hover:border-red-600 transition-all duration-300 z-10"
-        onClick={onClose}
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      {/* Navigation Arrows - Desktop */}
-      <button
-        onClick={prev}
-        disabled={activeIndex === 0}
-        className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-zinc-900/80 backdrop-blur-sm border border-gray-700 text-white rounded-md items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-red-600 hover:border-red-600 transition-all duration-300 z-10"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <button
-        onClick={next}
-        disabled={activeIndex === images.length - 1}
-        className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-zinc-900/80 backdrop-blur-sm border border-gray-700 text-white rounded-md items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-red-600 hover:border-red-600 transition-all duration-300 z-10"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-
-      {/* CONTENT */}
-      <div className="w-full max-w-6xl flex flex-col items-center">
-        {/* MAIN IMAGE */}
-        <div className="relative w-full">
-          <img
-            src={images[activeIndex]}
-            alt={`Gallery image ${activeIndex + 1}`}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className={`max-h-[70vh] w-full object-contain rounded-lg shadow-2xl transition-all duration-300 ${
-              fade ? "opacity-100 scale-100" : "opacity-0 scale-95"
-            }`}
-          />
+    <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6">
+      <div className="flex items-center justify-center gap-4 sm:gap-6">
+        <div className="hidden sm:block w-[22%]">
+          {leftIdx >= 0 && (
+            <button
+              onClick={prev}
+              className="w-full rounded-2xl overflow-hidden opacity-70 hover:opacity-100 transition"
+            >
+              <div className="aspect-[4/3] w-full bg-black/20">
+                <img src={images[leftIdx]} className="h-full w-full object-cover" alt="" />
+              </div>
+            </button>
+          )}
         </div>
 
-        {/* CAPTION & COUNTER */}
-        <div className="flex items-center justify-center gap-4 mt-6">
-          <div className="h-px bg-gray-600 w-12"></div>
-          <p className="text-white text-lg font-medium">
-            <span className="text-red-600">{activeIndex + 1}</span> / {images.length}
-          </p>
-          <div className="h-px bg-gray-600 w-12"></div>
-        </div>
-
-        {/* ARROWS - Mobile */}
-        <div className="flex md:hidden gap-4 mt-6">
+        <div className="w-full sm:w-[56%]">
           <button
-            onClick={prev}
-            disabled={activeIndex === 0}
-            className="w-12 h-12 bg-zinc-900 border border-gray-700 text-white rounded-md flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-red-600 hover:border-red-600 transition-all"
+            onClick={handleMainClick}
+            className="w-full rounded-2xl overflow-hidden shadow-2xl bg-white/10"
+            title={viewMode === "uniform" ? "Click to view real aspect" : "Click again for fullscreen"}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            {viewMode === "uniform" ? (
+              <div className="aspect-[4/3] w-full bg-black/10">
+                <img src={images[activeIndex]} className="h-full w-full object-cover" alt="" />
+              </div>
+            ) : (
+              <img
+                src={images[activeIndex]}
+                className={isFullscreen ? "w-full max-h-screen object-contain" : "w-full max-h-[75vh] object-contain"}
+                alt=""
+              />
+            )}
           </button>
-          <button
-            onClick={next}
-            disabled={activeIndex === images.length - 1}
-            className="w-12 h-12 bg-zinc-900 border border-gray-700 text-white rounded-md flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed hover:bg-red-600 hover:border-red-600 transition-all"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+
+          <div className="mt-2 text-center text-white/70 text-xs">
+            {viewMode === "uniform" ? "Click image to view real aspect ratio" : "Click again for fullscreen"}
+          </div>
         </div>
 
-        {/* THUMBNAILS */}
-        <div className="flex gap-3 mt-8 overflow-x-auto px-2 pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent max-w-full">
-          {images.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              alt={`Thumbnail ${i + 1}`}
-              onClick={() => setActiveIndex(i)}
-              className={`w-24 h-16 flex-shrink-0 object-cover rounded-md cursor-pointer transition-all duration-300 border-2 ${
-                i === activeIndex
-                  ? "border-red-600 opacity-100 scale-105"
-                  : "border-gray-700 opacity-50 hover:opacity-100 hover:border-gray-500"
-              }`}
-            />
-          ))}
+        <div className="hidden sm:block w-[22%]">
+          {rightIdx < images.length && (
+            <button
+              onClick={next}
+              className="w-full rounded-2xl overflow-hidden opacity-70 hover:opacity-100 transition"
+            >
+              <div className="aspect-[4/3] w-full bg-black/20">
+                <img src={images[rightIdx]} className="h-full w-full object-cover" alt="" />
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Custom scrollbar styles */}
-      <style jsx>{`
-        .scrollbar-thin::-webkit-scrollbar {
-          height: 6px;
-        }
-        .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
-          background-color: #374151;
-          border-radius: 3px;
-        }
-        .scrollbar-track-transparent::-webkit-scrollbar-track {
-          background-color: transparent;
-        }
-      `}</style>
+      {caption && (
+        <div className="mt-4 text-center text-white text-sm font-medium">{caption}</div>
+      )}
+
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <button
+          onClick={prev}
+          disabled={activeIndex === 0}
+          className="h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30 disabled:opacity-40 flex items-center justify-center"
+        >
+          ‹
+        </button>
+        <button
+          onClick={next}
+          disabled={activeIndex === images.length - 1}
+          className="h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30 disabled:opacity-40 flex items-center justify-center"
+        >
+          ›
+        </button>
+      </div>
     </div>
   );
 }

@@ -10,35 +10,30 @@ export async function POST(req: Request) {
     const { email, otp, newPassword } = await req.json();
 
     if (!email || !otp || !newPassword) {
-      return NextResponse.json(
-        { error: "Missing fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // find admin
-const AdminModel = Admin as any;
+    const AdminModel = Admin as any;
     const admin = await AdminModel.findOne({ email });
+
     if (!admin) {
-      return NextResponse.json(
-        { error: "Admin not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Admin not found" }, { status: 404 });
     }
 
-    // OTP must match and not expired
-    if (admin.resetOtp !== otp || admin.resetOtpExpiry < Date.now()) {
+    if (
+      admin.otp !== otp ||
+      !admin.otpExpiresAt ||
+      admin.otpExpiresAt < Date.now()
+    ) {
       return NextResponse.json(
         { error: "Invalid or expired OTP" },
         { status: 400 }
       );
     }
 
-    // update password
-    const hashed = await bcrypt.hash(newPassword, 10);
-    admin.password = hashed;
-    admin.resetOtp = null;
-    admin.resetOtpExpiry = null;
+    admin.password = await bcrypt.hash(newPassword, 10);
+    admin.otp = null;
+    admin.otpExpiresAt = null;
 
     await admin.save();
 
