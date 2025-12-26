@@ -332,6 +332,15 @@ export interface Rail {
 
 type RailTypesMap = Record<string, RailTypeConfig>;
 
+type ExistingRail = {
+  _id: string;
+  rail_pos: number;
+  rail_name: string;
+  rail_items: RailItem[];
+};
+
+
+
 export default function CreateRail() {
   const router = useRouter();
 
