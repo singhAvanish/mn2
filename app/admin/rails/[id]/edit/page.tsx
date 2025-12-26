@@ -8,13 +8,35 @@ import {
   uploadMultipleImages,
 } from "@/lib/uploadToCloudinary";
 
-export default function EditRailPage({ params }) {
+// Type definitions
+type RailItem = {
+  [key: string]: string | string[];
+};
+
+type Rail = {
+  _id: string;
+  rail_pos: number;
+  rail_name: string;
+  rail_items: RailItem[];
+};
+
+type FieldType = {
+  name: string;
+  label: string;
+  type: "text" | "image" | "image-array";
+};
+
+export default function EditRailPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
   const router = useRouter();
   const { id } = use(params); // Required for Next.js 16 App Router
 
-  const [rail, setRail] = useState(null);
+  const [rail, setRail] = useState<Rail | null>(null);
   const [railName, setRailName] = useState("");
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<RailItem[]>([]);
 
   // Load rail data
   useEffect(() => {
@@ -35,7 +57,7 @@ export default function EditRailPage({ params }) {
   const itemFields = railTypes[railPos].itemFields;
 
   // ⭐ FIXED safe merge update function
-  const updateItem = (index, key, value) => {
+  const updateItem = (index: number, key: string, value: string | string[]) => {
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = {
@@ -48,31 +70,31 @@ export default function EditRailPage({ params }) {
 
   // Add new item
   const addItem = () => {
-    const template = {};
-    itemFields.forEach((f) => {
-      template[f.name] = f.type === "image-array" ? [] : "";
-    });
-    setItems((prev) => [...prev, template]);
-  };
+  const template: RailItem = {};
+  itemFields.forEach((f: FieldType) => {
+    template[f.name] = f.type === "image-array" ? [] : "";
+  });
+  setItems((prev) => [...prev, template]);
+};
 
   // Delete an item
- const deleteItem = async (index) => {
-  if (!confirm("Are you sure you want to delete this item?")) return;
+  const deleteItem = async (index: number) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
 
-  // 1. Delete from DB
-  await fetch(`/api/rails/${rail._id}/items/${index}`, {
-    method: "DELETE",
-  });
+    // 1. Delete from DB
+    await fetch(`/api/rails/${rail._id}/items/${index}`, {
+      method: "DELETE",
+    });
 
-  // 2. Remove from React state
-  setItems(prev => prev.filter((_, i) => i !== index));
-};
+    // 2. Remove from React state
+    setItems(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Save updated rail
   const saveRail = async () => {
     // ⭐ SANITIZE items before saving
     const sanitized = items.map((item) => {
-      const clean = {};
+      const clean: RailItem = {};
       for (const key in item) {
         const val = item[key];
 
@@ -106,7 +128,7 @@ export default function EditRailPage({ params }) {
   };
 
   // Render a single field type
-  const renderField = (field, index) => {
+  const renderField = (field: FieldType, index: number) => {
     const value = items[index][field.name];
 
     // TEXT
@@ -114,7 +136,7 @@ export default function EditRailPage({ params }) {
       return (
         <input
           className="border p-2 w-full"
-          value={value}
+          value={value as string}
           onChange={(e) => updateItem(index, field.name, e.target.value)}
         />
       );
@@ -139,8 +161,9 @@ export default function EditRailPage({ params }) {
 
           {value && (
             <img
-              src={value}
+              src={value as string}
               className="w-24 h-24 rounded object-cover mt-2 shadow"
+              alt="Preview"
             />
           )}
         </>
@@ -148,40 +171,40 @@ export default function EditRailPage({ params }) {
     }
 
     // MULTIPLE IMAGES
-   if (field.type === "image-array") {
-  return (
-    <>
-      <input
-        type="file"
-        multiple
-        onChange={async (e) => {
-          const files = Array.from(e.target.files || []);
-          if (files.length === 0) return;
+    if (field.type === "image-array") {
+      return (
+        <>
+          <input
+            type="file"
+            multiple
+            onChange={async (e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length === 0) return;
 
-          const urls = await uploadMultipleImages(files);
+              const urls = await uploadMultipleImages(files);
 
-          if (urls && urls.length > 0) {
-            updateItem(index, field.name, urls);
-          }
+              if (urls && urls.length > 0) {
+                updateItem(index, field.name, urls);
+              }
 
-          // reset file input after upload
-          e.target.value = "";
-        }}
-      />
-
-      <div className="grid grid-cols-3 gap-2 mt-2">
-        {value?.map((img, i) => (
-          <img
-            key={i}
-            src={img}
-            className="w-20 h-20 object-cover rounded shadow"
+              // reset file input after upload
+              e.target.value = "";
+            }}
           />
-        ))}
-      </div>
-    </>
-  );
-}
 
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            {(value as string[])?.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="w-20 h-20 object-cover rounded shadow"
+                alt={`Image ${i + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      );
+    }
   };
 
   return (
@@ -228,14 +251,14 @@ export default function EditRailPage({ params }) {
               </button>
             </div>
 
-            {itemFields.map((field) => (
-              <div key={field.name} className="mb-4">
-                <label className="font-medium">{field.label}</label>
-                <div className="mt-1">
-                  {renderField(field, index)}
-                </div>
-              </div>
-            ))}
+            {itemFields.map((field: FieldType) => (
+  <div key={field.name} className="mb-4">
+    <label className="font-medium">{field.label}</label>
+    <div className="mt-1">
+      {renderField(field, index)}
+    </div>
+  </div>
+))}
           </div>
         ))}
       </div>

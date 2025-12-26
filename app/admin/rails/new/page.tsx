@@ -8,13 +8,31 @@ import {
   uploadMultipleImages,
 } from "@/lib/uploadToCloudinary";
 
+// Type definitions
+type RailItem = {
+  [key: string]: string | string[];
+};
+
+type ExistingRail = {
+  _id: string;
+  rail_pos: number;
+  rail_name: string;
+  rail_items: RailItem[];
+};
+
+type FieldType = {
+  name: string;
+  label: string;
+  type: "text" | "image" | "image-array";
+};
+
 export default function CreateRail() {
   const router = useRouter();
 
-  const [existingRails, setExistingRails] = useState([]);
+  const [existingRails, setExistingRails] = useState<ExistingRail[]>([]);
   const [railPos, setRailPos] = useState("");
   const [railName, setRailName] = useState("");
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<RailItem[]>([]);
 
   // Fetch rails
   useEffect(() => {
@@ -24,15 +42,15 @@ export default function CreateRail() {
   }, []);
 
   // Check if a rail of same position already exists
-  const railExists = (pos) =>
-    existingRails.some((r) => Number(r.rail_pos) === Number(pos));
+  const railExists = (pos: string | number) =>
+    existingRails.some((r: ExistingRail) => Number(r.rail_pos) === Number(pos));
 
   // When a rail type is selected
-  const handleRailSelect = (pos) => {
+  const handleRailSelect = (pos: string) => {
     setRailPos(pos);
 
     const found = existingRails.find(
-      (r) => Number(r.rail_pos) === Number(pos)
+      (r: ExistingRail) => Number(r.rail_pos) === Number(pos)
     );
 
     if (found) {
@@ -43,15 +61,15 @@ export default function CreateRail() {
 
   // Add item block
   const addItem = () => {
-    const template = {};
-    railTypes[railPos].itemFields.forEach((f) => {
+    const template: RailItem = {};
+    railTypes[Number(railPos)].itemFields.forEach((f: FieldType) => {
       template[f.name] = f.type === "image-array" ? [] : "";
     });
     setItems((prev) => [...prev, template]);
   };
 
   // ⭐ FIXED: Safe, merge-based updateItem
-  const updateItem = (index, key, value) => {
+  const updateItem = (index: number, key: string, value: string | string[]) => {
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = {
@@ -63,7 +81,7 @@ export default function CreateRail() {
   };
 
   // Delete item
-  const deleteItem = (index) => {
+  const deleteItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -73,7 +91,7 @@ export default function CreateRail() {
 
     // ⭐ SANITIZE DATA: remove empty strings, empty arrays
     const sanitized = items.map((item) => {
-      const clean = {};
+      const clean: RailItem = {};
       for (const key in item) {
         const val = item[key];
 
@@ -106,7 +124,7 @@ export default function CreateRail() {
   };
 
   // Render a field
-  const renderField = (field, index) => {
+  const renderField = (field: FieldType, index: number) => {
     const value = items[index][field.name];
 
     // Text Input
@@ -114,7 +132,7 @@ export default function CreateRail() {
       return (
         <input
           className="border p-2 w-full"
-          value={value}
+          value={value as string}
           onChange={(e) => updateItem(index, field.name, e.target.value)}
         />
       );
@@ -140,8 +158,9 @@ export default function CreateRail() {
 
           {value && (
             <img
-              src={value}
+              src={value as string}
               className="w-24 h-24 mt-2 rounded object-cover shadow"
+              alt="Preview"
             />
           )}
         </>
@@ -156,7 +175,7 @@ export default function CreateRail() {
             type="file"
             multiple
             onChange={async (e) => {
-              const files = Array.from(e.target.files) as File[];
+              const files = Array.from(e.target.files || []);
               if (files.length === 0) return;
 
               const urls = await uploadMultipleImages(files);
@@ -168,11 +187,12 @@ export default function CreateRail() {
           />
 
           <div className="grid grid-cols-3 gap-2 mt-2">
-            {value?.map((img, i) => (
+            {(value as string[])?.map((img, i) => (
               <img
                 key={i}
                 src={img}
                 className="w-20 h-20 rounded object-cover shadow"
+                alt={`Image ${i + 1}`}
               />
             ))}
           </div>
@@ -199,7 +219,7 @@ export default function CreateRail() {
 
         {availableRailTypes.map((pos) => (
           <option key={pos} value={pos}>
-            {railTypes[pos].label}
+            {railTypes[Number(pos)].label}
           </option>
         ))}
       </select>
@@ -244,7 +264,7 @@ export default function CreateRail() {
                 </button>
               </div>
 
-              {railTypes[railPos].itemFields.map((field) => (
+              {railTypes[Number(railPos)].itemFields.map((field: FieldType) => (
                 <div key={field.name} className="mb-4">
                   <label className="font-medium">{field.label}</label>
                   {renderField(field, index)}

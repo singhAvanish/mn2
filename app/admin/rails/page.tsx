@@ -3,14 +3,30 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default function RailsPage() {
-  const [rails, setRails] = useState([]);
+type Rail = {
+  _id: string;
+  rail_pos: number;
+  rail_name: string;
+  rail_items?: any[];
+};
 
-  useEffect(() => {
-    fetch("/api/rails")
-      .then((res) => res.json())
-      .then((data) => setRails(data));
-  }, []);
+export default function RailsPage() {
+  const [rails, setRails] = useState<Rail[]>([]);
+
+useEffect(() => {
+  const fetchRails = async () => {
+    try {
+      const res = await fetch("/api/rails");
+      if (!res.ok) throw new Error("Failed to fetch rails");
+      const data = await res.json();
+      setRails(data);
+    } catch (error) {
+      console.error("Error fetching rails:", error);
+    }
+  };
+  
+  fetchRails();
+}, []);
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
