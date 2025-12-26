@@ -9,8 +9,12 @@ export async function PUT(req, context) {
   const id = params.id;
   const idx = Number(params.index);
   const body = await req.json();
+      const RailModel = Rail as unknown as {
+    findById: (query: any) => Promise<any>;
+    create: (data: any) => Promise<any>;
+  };
 
-  const rail = await Rail.findById(id);
+  const rail = await RailModel.findById(id);
   if (!rail) return NextResponse.json({ error: "rail not found" }, { status: 404 });
 
   if (!Array.isArray(rail.rail_items) || idx < 0 || idx >= rail.rail_items.length) {
@@ -30,8 +34,12 @@ export async function DELETE(req, context) {
 
   const idx = Number(params.index);
   const id = params.id;
+       const RailModel = Rail as unknown as {
+    findById: (query: any) => Promise<any>;
+    create: (data: any) => Promise<any>;
+  };
 
-  const rail = await Rail.findById(id);
+  const rail = await RailModel.findById(id);
   if (!rail) {
     return NextResponse.json({ error: "rail not found" }, { status: 404 });
   }

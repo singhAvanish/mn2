@@ -1,26 +1,39 @@
-import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "./lib/jwt";
 
-export async function proxy(request: Request) {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
+export function proxy(req: NextRequest) {
+  const token = req.cookies.get("admin_token")?.value;
 
-  // Allow login page without redirect
-  if (pathname.startsWith("/admin/login")) {
+  // ALL PUBLIC ADMIN ROUTES
+  const publicPaths = [
+    "/admin/login",
+    "/admin/reset-password",
+    "/admin/verify-otp",
+    "/admin/create" // ⭐ allow first admin creation
+  ];
+
+  const pathname = req.nextUrl.pathname;
+
+  // If route is public → allow
+  if (publicPaths.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // Protect ALL other /admin routes
+  // If route starts with /admin → apply protection
   if (pathname.startsWith("/admin")) {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-
     if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+
+    const valid = verifyToken(token);
+    if (!valid) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
   }
 
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};

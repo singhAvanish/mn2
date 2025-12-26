@@ -3,35 +3,42 @@ import { connectDB } from "@/lib/mongodb";
 import Admin from "@/lib/models/Admin";
 import bcrypt from "bcrypt";
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const email = process.env.ADMIN_EMAIL;
-    const password = process.env.ADMIN_PASSWORD;
+    const adminCount = await Admin.countDocuments();
+
+    // ❗ Allow only the FIRST admin to be created
+    if (adminCount >= 1) {
+      return NextResponse.json(
+        { error: "Admin already exists. Cannot create more." },
+        { status: 403 }
+      );
+    }
+
+    const { email, password } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "ADMIN_EMAIL or ADMIN_PASSWORD missing in .env" },
+        { error: "Email and password are required." },
         { status: 400 }
       );
     }
 
-    const exists = await Admin.findOne({ email });
-
-    if (exists) {
-      return NextResponse.json({ message: "Admin already exists" });
-    }
-
     const hashed = await bcrypt.hash(password, 10);
 
-    await Admin.create({
+    const admin = await Admin.create({
       email,
       password: hashed,
     });
 
-    return NextResponse.json({ message: "Admin created successfully!" });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: true, message: "Admin created successfully", admin },
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

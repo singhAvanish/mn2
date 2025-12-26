@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
+import { verifyAuth } from "@/lib/verifyAuth";
 import { redirect } from "next/navigation";
 
 export default async function AdminDashboard() {
-  const session = await auth();
+  const session = await verifyAuth();
 
   if (!session) redirect("/admin/login");
 

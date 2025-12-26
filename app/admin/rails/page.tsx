@@ -10,23 +10,34 @@ type Rail = {
   rail_items?: any[];
 };
 
+/** ---- TYPES ---- */
+interface RailItem {
+  [key: string]: any;
+}
+
+interface Rail {
+  _id: string;
+  rail_name: string;
+  rail_pos: number | string;
+  rail_items: RailItem[];
+}
+
 export default function RailsPage() {
   const [rails, setRails] = useState<Rail[]>([]);
 
-useEffect(() => {
-  const fetchRails = async () => {
-    try {
-      const res = await fetch("/api/rails");
-      if (!res.ok) throw new Error("Failed to fetch rails");
-      const data = await res.json();
-      setRails(data);
-    } catch (error) {
-      console.error("Error fetching rails:", error);
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/rails");
+        const data = await res.json();
+        setRails(data);
+      } catch (err) {
+        console.error("Failed to load rails:", err);
+      }
     }
-  };
-  
-  fetchRails();
-}, []);
+
+    load();
+  }, []);
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -40,7 +51,6 @@ useEffect(() => {
       </Link>
 
       <div className="mt-6 space-y-4">
-
         {rails.map((rail) => (
           <div key={rail._id} className="border p-4 rounded bg-gray-50">
             <h2 className="text-xl font-semibold">
@@ -68,7 +78,6 @@ useEffect(() => {
             </div>
           </div>
         ))}
-
       </div>
     </div>
   );
