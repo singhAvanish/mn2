@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type Rail = {
-  _id: string;
-  rail_pos: number;
-  rail_name: string;
-  rail_items?: any[];
-};
+// type Rail = {
+//   _id: string;
+//   rail_pos: number;
+//   rail_name: string;
+//   rail_items?: any[];
+// };
 
 /** ---- TYPES ---- */
 interface RailItem {
