@@ -11,9 +11,12 @@ import RailRenderer from "./components/Rails/RailRenderer";
 
 
 // app/page.tsx
+
+
 export default async function HomePage() {
-  // Use relative URL instead
-  const res = await fetch('/api/rails', { cache: "no-store" });
+  const res = await fetch('https://mn2-orpin.vercel.app/api/rails', { 
+    cache: "no-store" 
+  });
   const rails = await res.json();
 
   const sortedRails = rails.sort((a, b) => Number(a.rail_pos) - Number(b.rail_pos));
