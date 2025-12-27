@@ -68,6 +68,7 @@ import RailOne from "./RailOne";
 import RailTwo from "./RailTwo";
 import RailThree from "./RailThree";
 import RailFour from "./RailFour";
+import RailFive from "./RailFive";
 
 export default function RailRenderer({ rails }: { rails: any[] }) {
   if (!rails || rails.length === 0) return null;
@@ -82,6 +83,7 @@ export default function RailRenderer({ rails }: { rails: any[] }) {
   const rail3 = sortedRails.find((r) => Number(r.rail_pos) === 3);
   const rail4 = sortedRails.find((r) => Number(r.rail_pos) === 4);
 
+ const rail5 = sortedRails.find((r) => Number(r.rail_pos) === 5);
   return (
     <div className="bg-[#f8f8f8]">
       {/* ================= RAIL 1 (VIDEO HERO) ================= */}
@@ -124,6 +126,8 @@ export default function RailRenderer({ rails }: { rails: any[] }) {
           </div>
         </div>
       )}
+
+      {rail5 && <RailFive rail={rail5} />}
     </div>
   );
 }

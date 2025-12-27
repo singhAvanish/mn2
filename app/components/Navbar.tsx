@@ -28,7 +28,7 @@ export default function Navbar() {
 
       {/* DESKTOP MENU */}
       <div className="hidden md:flex gap-8 text-sm font-medium text-white">
-        {["About", "Work", "Brands", "Contact"].map((label, i) => (
+        {["Work", "Brands","Reviews","About", "Contact"].map((label, i) => (
           <button
             key={i}
             onClick={() =>
@@ -39,6 +39,8 @@ export default function Navbar() {
                   ? "work-section"
                   : label === "Brands"
                   ? "brands-section"
+                  :label=="Reviews"
+                  ? "review-section"
                   : "contact-section"
               )
             }
@@ -60,7 +62,7 @@ export default function Navbar() {
       {/* MOBILE MENU */}
       {menuOpen && (
         <div className="absolute top-full left-0 w-full bg-black/95 backdrop-blur-md text-white py-8 px-6 flex flex-col gap-6 text-lg md:hidden">
-          {["About", "Work", "Brands", "Contact"].map((label, i) => (
+          {[ "Work", "Brands","Reviews", "About","Contact"].map((label, i) => (
             <button
               key={i}
               onClick={() =>
@@ -71,6 +73,8 @@ export default function Navbar() {
                     ? "work-section"
                     : label === "Brands"
                     ? "brands-section"
+                    :label=="Reviews"
+                    ? "review-section"
                     : "contact-section",
                   setMenuOpen
                 )
