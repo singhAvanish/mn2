@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { verifyAuth } from "@/lib/verifyAuth";
 import { redirect } from "next/navigation";
 

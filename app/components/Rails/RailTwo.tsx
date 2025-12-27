@@ -523,7 +523,7 @@ export default function RailTwo({ rail }: any) {
   };
 
   return (
-    <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-[#f8f8f8]">
+    <section id="work-section" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-[#f8f8f8]">
       <div className="text-center mb-10 sm:mb-14 md:mb-16">
         <div className="w-10 sm:w-12 md:w-16 h-1 bg-red-600 mx-auto mb-4 sm:mb-6"></div>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#111]">
