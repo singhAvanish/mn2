@@ -322,21 +322,32 @@ function BackgroundVideo({ item }: any) {
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full h-[85vh] overflow-hidden bg-[#f8f8f8]">
+    <div
+  ref={wrapperRef}
+  className="relative w-full h-[92vh] md:h-[85vh] overflow-hidden bg-black"
+>
       {/* VIDEO */}
-      <video
-        ref={videoRef}
-        src={item.videoUrl}
-        autoPlay
-        loop
-        muted={muted}
-        playsInline
-        className="w-full h-full object-cover"
-      />
+    <video
+  ref={videoRef}
+  src={item.videoUrl}
+  autoPlay
+  loop
+  muted={muted}
+  playsInline
+  className="
+    absolute inset-0
+    w-full h-full
+    object-cover
+    scale-[1.12] sm:scale-100 md:scale-100
+  "
+/>
+
 
       {/* LIGHT CINEMATIC OVERLAY */}
-      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent opacity-90" />
-      <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-transparent to-white/40" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+<div className="absolute inset-0 bg-linear-to-r from-black/30 via-transparent to-black/30" />
+
+     
 
       {/* SOUND BUTTON */}
       <button
