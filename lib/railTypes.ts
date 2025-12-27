@@ -35,5 +35,13 @@ export const railTypes: Record<number, any> = {
       { name: "images", label: "Gallery Images", type: "image-array" }
     ],
   },
+  5: {
+    label: "Customer Reviews (Google / Testimonials)",
+    itemFields: [
+      { name: "userName", label: "User Name", type: "text" },
+      { name: "rating", label: "Star Rating (1–5)", type: "text" },
+      { name: "review", label: "Review Text", type: "text" },
+    ],
+  },
 
 }
