@@ -355,24 +355,29 @@ export default function RailTwo({ rail }: any) {
             <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-400/10" />
 
             {/* close */}
-            <motion.button
-              onClick={closeModal}
-              className="
-                absolute top-4 sm:top-6 right-4 sm:right-6 z-10
-                h-11 w-11 rounded-full
-                border border-white/15
-                bg-white/10 backdrop-blur-xl
-                text-white hover:bg-white/15
-                shadow-[0_14px_40px_rgba(0,0,0,0.35)]
-                flex items-center justify-center
-                transition
-              "
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              aria-label="Close"
-            >
-              ✕
-            </motion.button>
+          <motion.button
+  onClick={(e) => {
+    e.stopPropagation();
+    closeModal();
+  }}
+  className="
+    fixed top-4 sm:top-6 right-4 sm:right-6 z-[99999]
+    h-11 w-11 rounded-full
+    border border-white/15
+    bg-white/10 backdrop-blur-xl
+    text-white hover:bg-white/15
+    shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+    flex items-center justify-center
+    transition
+  "
+  whileHover={{ y: -2 }}
+  whileTap={{ scale: 0.98 }}
+  aria-label="Close"
+  type="button"
+>
+  ✕
+</motion.button>
+
 
             {/* body */}
             <motion.div
@@ -396,38 +401,228 @@ export default function RailTwo({ rail }: any) {
   );
 }
 
+// function ModalBody({ category, activeIndex, setActiveIndex, modalRef }: any) {
+//   const images: string[] = (category?.images || []).flat();
+//   const [viewMode, setViewMode] = useState<"uniform" | "real">("uniform");
+//   const [isFullscreen, setIsFullscreen] = useState(false);
+
+//   const caption = category?.name || category?.title || category?.label || "";
+
+//   useEffect(() => {
+//     setViewMode("uniform");
+//   }, [activeIndex]);
+
+//   const next = () => {
+//     if (activeIndex < images.length - 1) setActiveIndex(activeIndex + 1);
+//   };
+//   const prev = () => {
+//     if (activeIndex > 0) setActiveIndex(activeIndex - 1);
+//   };
+
+//   useEffect(() => {
+//     const onKey = (e: KeyboardEvent) => {
+//       if (e.key === "ArrowRight") next();
+//       if (e.key === "ArrowLeft") prev();
+//     };
+//     window.addEventListener("keydown", onKey);
+//     return () => window.removeEventListener("keydown", onKey);
+//   }, [activeIndex, images.length]);
+
+//   useEffect(() => {
+//     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+//     document.addEventListener("fullscreenchange", onFsChange);
+//     return () => document.removeEventListener("fullscreenchange", onFsChange);
+//   }, []);
+
+//   const handleMainClick = async () => {
+//     if (viewMode === "uniform") {
+//       setViewMode("real");
+//       return;
+//     }
+//     try {
+//       if (!document.fullscreenElement) {
+//         await modalRef.current?.requestFullscreen?.();
+//       } else {
+//         await document.exitFullscreen?.();
+//       }
+//     } catch {}
+//   };
+
+//   if (!images.length) return null;
+
+//   return (
+//     <div className="relative z-10 w-full max-w-6xl px-4 sm:px-6 mx-auto">
+//       {/* panel */}
+//       <div className="rounded-3xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.45)] p-4 sm:p-6">
+//         {/* header */}
+//         <div className="flex items-center justify-between gap-4 mb-4">
+//           <div className="text-white/90">
+//             <div className="text-sm font-medium tracking-tight">{caption || "Gallery"}</div>
+//             <div className="text-xs text-white/60 mt-1">
+//               {viewMode === "uniform"
+//                 ? "Click main image to expand"
+//                 : "Click again for fullscreen"}
+//             </div>
+//           </div>
+
+//           <div className="text-xs text-white/70">
+//             {activeIndex + 1} / {images.length}
+//           </div>
+//         </div>
+
+//         {/* ✅ MOBILE-STYLE LAYOUT ON ALL SCREENS */}
+//         <div className="flex flex-col items-center">
+//           {/* MAIN IMAGE: smaller by default, bigger after click */}
+//           <button
+//             onClick={handleMainClick}
+//             className="
+//               rounded-2xl overflow-hidden
+//               border border-white/10
+//               shadow-[0_18px_60px_rgba(0,0,0,0.55)]
+//               bg-black/15
+//               focus:outline-none focus:ring-2 focus:ring-white/30
+//               transition
+//               w-full
+//             "
+//             style={{
+//               maxWidth: viewMode === "uniform" ? 520 : 980,
+//             }}
+//             title={viewMode === "uniform" ? "Click to expand" : "Click again for fullscreen"}
+//           >
+//             <AnimatePresence mode="wait">
+//               <motion.div
+//                 key={`${activeIndex}-${viewMode}`}
+//                 initial={{ opacity: 0, scale: 0.98, y: 10, filter: "blur(10px)" }}
+//                 animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+//                 exit={{ opacity: 0, scale: 0.985, y: -6, filter: "blur(10px)" }}
+//                 transition={{ type: "spring", stiffness: 240, damping: 22 }}
+//               >
+//                 {viewMode === "uniform" ? (
+//                   <div className="aspect-[4/3] w-full bg-black/10">
+//                     <img src={images[activeIndex]} className="h-full w-full object-cover" alt="" />
+//                   </div>
+//                 ) : (
+//                   <img
+//                     src={images[activeIndex]}
+//                     className={
+//                       isFullscreen
+//                         ? "w-full max-h-screen object-contain"
+//                         : "w-full max-h-[78vh] object-contain"
+//                     }
+//                     alt=""
+//                   />
+//                 )}
+//               </motion.div>
+//             </AnimatePresence>
+//           </button>
+
+//           {/* helper text */}
+//           <div className="mt-3 text-center text-white/60 text-xs">
+//             {viewMode === "uniform" ? "Click image to expand" : "Click again for fullscreen"}
+//           </div>
+
+//           {/* thumbnail strip */}
+//           <div className="mt-4 w-full" style={{ maxWidth: 980 }}>
+//             <div className="overflow-x-auto">
+//               <div className="flex gap-2 px-1 pb-1">
+//                 {images.map((src, i) => (
+//                   <button
+//                     key={src + i}
+//                     onClick={() => setActiveIndex(i)}
+//                     className={`shrink-0 rounded-xl overflow-hidden border transition ${
+//                       i === activeIndex
+//                         ? "border-white/60 opacity-100"
+//                         : "border-white/10 opacity-70 hover:opacity-100"
+//                     }`}
+//                     style={{ width: 78, height: 58 }}
+//                     aria-label={`Open image ${i + 1}`}
+//                   >
+//                     <img src={src} className="h-full w-full object-cover" alt="" />
+//                   </button>
+//                 ))}
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* nav buttons */}
+//           <div className="mt-6 flex items-center justify-center gap-4">
+//             <button
+//               onClick={prev}
+//               disabled={activeIndex === 0}
+//               className="
+//                 h-11 w-11 rounded-full
+//                 border border-white/15
+//                 bg-white/10 backdrop-blur-xl
+//                 text-white hover:bg-white/15
+//                 disabled:opacity-40 disabled:cursor-not-allowed
+//                 flex items-center justify-center
+//                 transition
+//               "
+//             >
+//               ‹
+//             </button>
+
+//             <button
+//               onClick={next}
+//               disabled={activeIndex === images.length - 1}
+//               className="
+//                 h-11 w-11 rounded-full
+//                 border border-white/15
+//                 bg-white/10 backdrop-blur-xl
+//                 text-white hover:bg-white/15
+//                 disabled:opacity-40 disabled:cursor-not-allowed
+//                 flex items-center justify-center
+//                 transition
+//               "
+//             >
+//               ›
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
 function ModalBody({ category, activeIndex, setActiveIndex, modalRef }: any) {
   const images: string[] = (category?.images || []).flat();
   const [viewMode, setViewMode] = useState<"uniform" | "real">("uniform");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const caption = category?.name || category?.title || category?.label || "";
+  const caption = category?.name || category?.title || category?.label || category?.heading || "";
 
   useEffect(() => {
     setViewMode("uniform");
   }, [activeIndex]);
 
   const next = () => {
+    if (!images.length) return;
     if (activeIndex < images.length - 1) setActiveIndex(activeIndex + 1);
   };
   const prev = () => {
+    if (!images.length) return;
     if (activeIndex > 0) setActiveIndex(activeIndex - 1);
   };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [activeIndex, images.length]);
 
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
+
+  // ✅ helpful in fullscreen: Esc exits fullscreen
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "Escape" && document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeIndex, images.length]);
 
   const handleMainClick = async () => {
     if (viewMode === "uniform") {
@@ -443,137 +638,273 @@ function ModalBody({ category, activeIndex, setActiveIndex, modalRef }: any) {
     } catch {}
   };
 
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await modalRef.current?.requestFullscreen?.();
+      } else {
+        await document.exitFullscreen?.();
+      }
+    } catch {}
+  };
+
   if (!images.length) return null;
 
   return (
-    <div className="relative z-10 w-full max-w-6xl px-4 sm:px-6 mx-auto">
-      {/* panel */}
-      <div className="rounded-3xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.45)] p-4 sm:p-6">
+    <div className="relative w-full max-w-6xl mx-auto">
+      {/* ================== MOBILE (Rail4-like card gallery) ================== */}
+      <div className="md:hidden rounded-3xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.45)] p-3">
         {/* header */}
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="text-white/90">
-            <div className="text-sm font-medium tracking-tight">{caption || "Gallery"}</div>
+          <div className="text-white/90 min-w-0">
+            <div className="text-sm font-medium tracking-tight truncate">
+              {caption || "Gallery"}
+            </div>
             <div className="text-xs text-white/60 mt-1">
               {viewMode === "uniform"
-                ? "Click main image to expand"
-                : "Click again for fullscreen"}
+                ? "Tap image to enlarge"
+                : isFullscreen
+                ? "Fullscreen (tap image to exit)"
+                : "Tap again for fullscreen"}
             </div>
           </div>
-
-          <div className="text-xs text-white/70">
+          <div className="text-xs text-white/70 whitespace-nowrap">
             {activeIndex + 1} / {images.length}
           </div>
         </div>
 
-        {/* ✅ MOBILE-STYLE LAYOUT ON ALL SCREENS */}
-        <div className="flex flex-col items-center">
-          {/* MAIN IMAGE: smaller by default, bigger after click */}
-          <button
-            onClick={handleMainClick}
-            className="
-              rounded-2xl overflow-hidden
-              border border-white/10
-              shadow-[0_18px_60px_rgba(0,0,0,0.55)]
-              bg-black/15
-              focus:outline-none focus:ring-2 focus:ring-white/30
-              transition
-              w-full
-            "
-            style={{
-              maxWidth: viewMode === "uniform" ? 520 : 980,
-            }}
-            title={viewMode === "uniform" ? "Click to expand" : "Click again for fullscreen"}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${activeIndex}-${viewMode}`}
-                initial={{ opacity: 0, scale: 0.98, y: 10, filter: "blur(10px)" }}
-                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.985, y: -6, filter: "blur(10px)" }}
-                transition={{ type: "spring", stiffness: 240, damping: 22 }}
+        {/* main image */}
+        <button
+          onClick={handleMainClick}
+          type="button"
+          className="w-full rounded-2xl overflow-hidden shadow-2xl bg-black/10 border border-white/10"
+        >
+          {viewMode === "uniform" ? (
+            <div className="aspect-[4/3] w-full bg-black/10">
+              <img
+                src={images[activeIndex]}
+                className="h-full w-full object-cover"
+                alt=""
+              />
+            </div>
+          ) : (
+            <img
+              src={images[activeIndex]}
+              className={
+                isFullscreen
+                  ? "w-full max-h-[100vh] object-contain"
+                  : "w-full max-h-[72vh] object-contain"
+              }
+              alt=""
+            />
+          )}
+        </button>
+
+        {/* thumbs */}
+        <div className="mt-4 overflow-x-auto">
+          <div className="flex gap-2 pb-1">
+            {images.map((src, i) => (
+              <button
+                key={src + i}
+                type="button"
+                onClick={() => setActiveIndex(i)}
+                className={`shrink-0 rounded-xl overflow-hidden border transition ${
+                  i === activeIndex ? "border-white/60 opacity-100" : "border-white/10 opacity-70"
+                }`}
+                style={{ width: 64, height: 48 }}
+                aria-label={`Open image ${i + 1}`}
               >
-                {viewMode === "uniform" ? (
-                  <div className="aspect-[4/3] w-full bg-black/10">
-                    <img src={images[activeIndex]} className="h-full w-full object-cover" alt="" />
-                  </div>
-                ) : (
-                  <img
-                    src={images[activeIndex]}
-                    className={
-                      isFullscreen
-                        ? "w-full max-h-screen object-contain"
-                        : "w-full max-h-[78vh] object-contain"
-                    }
-                    alt=""
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </button>
-
-          {/* helper text */}
-          <div className="mt-3 text-center text-white/60 text-xs">
-            {viewMode === "uniform" ? "Click image to expand" : "Click again for fullscreen"}
+                <img src={src} className="h-full w-full object-cover" alt="" />
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* thumbnail strip */}
-          <div className="mt-4 w-full" style={{ maxWidth: 980 }}>
-            <div className="overflow-x-auto">
-              <div className="flex gap-2 px-1 pb-1">
-                {images.map((src, i) => (
-                  <button
-                    key={src + i}
-                    onClick={() => setActiveIndex(i)}
-                    className={`shrink-0 rounded-xl overflow-hidden border transition ${
-                      i === activeIndex
-                        ? "border-white/60 opacity-100"
-                        : "border-white/10 opacity-70 hover:opacity-100"
-                    }`}
-                    style={{ width: 78, height: 58 }}
-                    aria-label={`Open image ${i + 1}`}
-                  >
-                    <img src={src} className="h-full w-full object-cover" alt="" />
-                  </button>
-                ))}
+        {/* nav */}
+        <div className="mt-5 flex items-center justify-center gap-4">
+          <button
+            onClick={prev}
+            disabled={activeIndex === 0}
+            type="button"
+            className="h-11 w-11 rounded-full border border-white/15 bg-white/10 backdrop-blur-xl text-white hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
+          >
+            ‹
+          </button>
+          <button
+            onClick={next}
+            disabled={activeIndex === images.length - 1}
+            type="button"
+            className="h-11 w-11 rounded-full border border-white/15 bg-white/10 backdrop-blur-xl text-white hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
+          >
+            ›
+          </button>
+        </div>
+
+        {caption && (
+          <div className="mt-4 text-center text-white/85 text-sm font-medium">
+            {caption}
+          </div>
+        )}
+      </div>
+
+      {/* ================== DESKTOP (Rail4 premium gallery) ================== */}
+      <div className="hidden md:block">
+        <div
+          className="
+            w-full
+            rounded-[28px]
+            border border-white/12
+            bg-white/10 backdrop-blur-2xl
+            shadow-[0_40px_120px_rgba(0,0,0,0.55)]
+            overflow-hidden
+          "
+        >
+          {/* top bar */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+            <div className="min-w-0">
+              <div className="text-white font-medium tracking-tight truncate">
+                {caption || "Gallery"}
+              </div>
+              <div className="text-white/55 text-xs mt-0.5">
+                Use ← → keys • Click thumbnails • Esc to exit fullscreen/close
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {viewMode === "real" && (
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  className="text-xs text-white/80 hover:text-white transition border border-white/15 bg-white/10 rounded-full px-3 py-1"
+                >
+                  {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                </button>
+              )}
+
+              <div className="text-white/70 text-sm whitespace-nowrap">
+                {activeIndex + 1} / {images.length}
               </div>
             </div>
           </div>
 
-          {/* nav buttons */}
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <button
-              onClick={prev}
-              disabled={activeIndex === 0}
-              className="
-                h-11 w-11 rounded-full
-                border border-white/15
-                bg-white/10 backdrop-blur-xl
-                text-white hover:bg-white/15
-                disabled:opacity-40 disabled:cursor-not-allowed
-                flex items-center justify-center
-                transition
-              "
-            >
-              ‹
-            </button>
+          {/* body */}
+          <div className="grid grid-cols-[220px_1fr]">
+            {/* thumbnails */}
+            <div className="border-r border-white/10 bg-black/15">
+              <div className="h-[78vh] overflow-y-auto p-4 space-y-3">
+                {images.map((src, i) => {
+                  const active = i === activeIndex;
+                  return (
+                    <button
+                      key={src + i}
+                      type="button"
+                      onClick={() => setActiveIndex(i)}
+                      className={`
+                        group w-full rounded-2xl overflow-hidden
+                        border transition
+                        ${active ? "border-white/60 bg-white/10" : "border-white/10 hover:border-white/25"}
+                      `}
+                      aria-label={`Open image ${i + 1}`}
+                    >
+                      {/* uniform thumb aspect */}
+                      <div className="aspect-[4/3] w-full bg-black/20">
+                        <img
+                          src={src}
+                          alt=""
+                          className={`h-full w-full object-cover transition duration-500 ${
+                            active ? "scale-[1.02]" : "group-hover:scale-[1.03]"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <button
-              onClick={next}
-              disabled={activeIndex === images.length - 1}
-              className="
-                h-11 w-11 rounded-full
-                border border-white/15
-                bg-white/10 backdrop-blur-xl
-                text-white hover:bg-white/15
-                disabled:opacity-40 disabled:cursor-not-allowed
-                flex items-center justify-center
-                transition
-              "
-            >
-              ›
-            </button>
+            {/* main preview */}
+            <div className="relative bg-black/10">
+              <div className="h-[78vh] w-full flex items-center justify-center p-6">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={`${images[activeIndex]}-${viewMode}`}
+                    src={images[activeIndex]}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, filter: "blur(10px)" }}
+                    transition={{ type: "spring", stiffness: 240, damping: 22 }}
+                    onClick={() => {
+                      // keep your original behavior: first click switches to real,
+                      // next click toggles fullscreen
+                      handleMainClick();
+                    }}
+                  />
+                </AnimatePresence>
+              </div>
+
+              {/* arrows */}
+              {images.length > 1 && (
+                <>
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prev();
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="
+                      absolute left-5 top-1/2 -translate-y-1/2
+                      h-12 w-12 rounded-full
+                      border border-white/15
+                      bg-white/10 backdrop-blur-xl
+                      text-white hover:bg-white/15
+                      shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+                      flex items-center justify-center
+                      transition
+                    "
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      next();
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="
+                      absolute right-5 top-1/2 -translate-y-1/2
+                      h-12 w-12 rounded-full
+                      border border-white/15
+                      bg-white/10 backdrop-blur-xl
+                      text-white hover:bg-white/15
+                      shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+                      flex items-center justify-center
+                      transition
+                    "
+                    aria-label="Next image"
+                  >
+                    ›
+                  </motion.button>
+                </>
+              )}
+
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/35 to-transparent" />
+            </div>
           </div>
         </div>
+
+        {caption && (
+          <div className="mt-4 text-center text-white/85 text-sm font-medium">
+            {caption}
+          </div>
+        )}
       </div>
     </div>
   );

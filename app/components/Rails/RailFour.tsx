@@ -718,6 +718,175 @@ export default function RailFour({ rail }: any) {
 
 /* ================= MODAL (same behavior, upgraded UI + animation) ================= */
 
+// function ProjectGalleryModal({
+//   modalRef,
+//   project,
+//   activeIndex,
+//   setActiveIndex,
+//   onClose,
+// }: any) {
+//   const images: string[] = Array.isArray(project?.images) ? project.images.flat() : [];
+//   const caption = project?.projectName || project?.name || project?.title || "";
+
+//   // keyboard support
+//   useEffect(() => {
+//     const onKey = (e: KeyboardEvent) => {
+//       if (e.key === "Escape") onClose();
+//       if (e.key === "ArrowRight") setActiveIndex((i: number) => (i + 1) % images.length);
+//       if (e.key === "ArrowLeft") setActiveIndex((i: number) => (i - 1 + images.length) % images.length);
+//     };
+//     window.addEventListener("keydown", onKey);
+//     return () => window.removeEventListener("keydown", onKey);
+//   }, [images.length, onClose, setActiveIndex]);
+
+//   if (!images.length) return null;
+
+//   const next = () => setActiveIndex((i: number) => (i + 1) % images.length);
+//   const prev = () => setActiveIndex((i: number) => (i - 1 + images.length) % images.length);
+
+//   return (
+//     <motion.div
+//       ref={modalRef}
+//       className="fixed inset-0 z-[9999] flex items-center justify-center"
+//       initial={{ opacity: 0 }}
+//       animate={{ opacity: 1 }}
+//       exit={{ opacity: 0 }}
+//     >
+//       {/* BACKDROP */}
+//       <motion.div
+//         className="absolute inset-0 bg-black/90"
+//         onClick={onClose}
+//         initial={{ opacity: 0 }}
+//         animate={{ opacity: 1 }}
+//         exit={{ opacity: 0 }}
+//       />
+//       <div className="absolute inset-0 backdrop-blur-2xl bg-white/5" />
+
+//       {/* CLOSE */}
+//       <motion.button
+//         onClick={onClose}
+//         className="
+//           absolute top-4 sm:top-6 right-4 sm:right-6 z-10
+//           h-11 w-11 rounded-full
+//           border border-white/15
+//           bg-white/10 backdrop-blur-xl
+//           text-white hover:bg-white/15
+//           shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+//           flex items-center justify-center
+//           transition
+//         "
+//         whileHover={{ y: -2 }}
+//         whileTap={{ scale: 0.98 }}
+//         aria-label="Close"
+//         type="button"
+//       >
+//         ✕
+//       </motion.button>
+
+//       {/* CONTENT */}
+//       <motion.div
+//         className="relative z-10 w-full max-w-6xl px-4 sm:px-6 mx-auto"
+//         initial={{ opacity: 0, y: 18, scale: 0.98 }}
+//         animate={{ opacity: 1, y: 0, scale: 1 }}
+//         exit={{ opacity: 0, y: 10, scale: 0.98 }}
+//         transition={{ type: "spring", stiffness: 260, damping: 22 }}
+//       >
+//         <div className="rounded-3xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.45)] p-4 sm:p-6">
+//           {/* header */}
+//           <div className="flex items-center justify-between gap-4 mb-4">
+//             <div className="text-white/90">
+//               <div className="text-sm font-medium tracking-tight">{caption || "Project Gallery"}</div>
+//               <div className="text-xs text-white/60 mt-1">
+//                 Use ← → keys, or tap arrows
+//               </div>
+//             </div>
+//             <div className="text-xs text-white/70">
+//               {activeIndex + 1} / {images.length}
+//             </div>
+//           </div>
+
+//           {/* image */}
+//           <div className="relative">
+//             <div className="w-full max-h-[85vh] bg-black/20 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl border border-white/10">
+//               <AnimatePresence mode="wait">
+//                 <motion.img
+//                   key={images[activeIndex]}
+//                   src={images[activeIndex]}
+//                   alt=""
+//                   className="w-full max-h-[85vh] object-contain"
+//                   initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+//                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+//                   exit={{ opacity: 0, y: -8, filter: "blur(10px)" }}
+//                   transition={{ type: "spring", stiffness: 240, damping: 22 }}
+//                 />
+//               </AnimatePresence>
+//             </div>
+
+//             {/* arrows */}
+//             {images.length > 1 && (
+//               <>
+//                 <motion.button
+//                   type="button"
+//                   onClick={(e) => {
+//                     e.stopPropagation();
+//                     prev();
+//                   }}
+//                   whileHover={{ y: -2 }}
+//                   whileTap={{ scale: 0.98 }}
+//                   className="
+//                     absolute left-3 sm:left-4 top-1/2 -translate-y-1/2
+//                     h-11 w-11 rounded-full
+//                     border border-white/15
+//                     bg-white/10 backdrop-blur-xl
+//                     text-white hover:bg-white/15
+//                     shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+//                     flex items-center justify-center
+//                     transition
+//                   "
+//                   aria-label="Previous image"
+//                 >
+//                   ‹
+//                 </motion.button>
+
+//                 <motion.button
+//                   type="button"
+//                   onClick={(e) => {
+//                     e.stopPropagation();
+//                     next();
+//                   }}
+//                   whileHover={{ y: -2 }}
+//                   whileTap={{ scale: 0.98 }}
+//                   className="
+//                     absolute right-3 sm:right-4 top-1/2 -translate-y-1/2
+//                     h-11 w-11 rounded-full
+//                     border border-white/15
+//                     bg-white/10 backdrop-blur-xl
+//                     text-white hover:bg-white/15
+//                     shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+//                     flex items-center justify-center
+//                     transition
+//                   "
+//                   aria-label="Next image"
+//                 >
+//                   ›
+//                 </motion.button>
+//               </>
+//             )}
+//           </div>
+
+//           {/* caption */}
+//           {caption && (
+//             <div className="mt-4 text-center text-white/85 text-sm font-medium">
+//               {caption}
+//             </div>
+//           )}
+//         </div>
+//       </motion.div>
+//     </motion.div>
+//   );
+// }
+
+
 function ProjectGalleryModal({
   modalRef,
   project,
@@ -728,7 +897,6 @@ function ProjectGalleryModal({
   const images: string[] = Array.isArray(project?.images) ? project.images.flat() : [];
   const caption = project?.projectName || project?.name || project?.title || "";
 
-  // keyboard support
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -747,12 +915,12 @@ function ProjectGalleryModal({
   return (
     <motion.div
       ref={modalRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-[9999]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* BACKDROP */}
+      {/* Backdrop */}
       <motion.div
         className="absolute inset-0 bg-black/90"
         onClick={onClose}
@@ -762,11 +930,11 @@ function ProjectGalleryModal({
       />
       <div className="absolute inset-0 backdrop-blur-2xl bg-white/5" />
 
-      {/* CLOSE */}
+      {/* Close (always on top) */}
       <motion.button
         onClick={onClose}
         className="
-          absolute top-4 sm:top-6 right-4 sm:right-6 z-10
+          fixed top-4 right-4 sm:top-6 sm:right-6 z-[99999]
           h-11 w-11 rounded-full
           border border-white/15
           bg-white/10 backdrop-blur-xl
@@ -783,105 +951,239 @@ function ProjectGalleryModal({
         ✕
       </motion.button>
 
-      {/* CONTENT */}
-      <motion.div
-        className="relative z-10 w-full max-w-6xl px-4 sm:px-6 mx-auto"
-        initial={{ opacity: 0, y: 18, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      >
-        <div className="rounded-3xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.45)] p-4 sm:p-6">
-          {/* header */}
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <div className="text-white/90">
-              <div className="text-sm font-medium tracking-tight">{caption || "Project Gallery"}</div>
-              <div className="text-xs text-white/60 mt-1">
-                Use ← → keys, or tap arrows
+      {/* ================== MOBILE (unchanged feel) ================== */}
+      <div className="md:hidden relative z-10 w-full h-full flex items-center justify-center px-4">
+        <motion.div
+          className="w-full max-w-lg"
+          initial={{ opacity: 0, y: 18, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        >
+          <div className="rounded-3xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.45)] p-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="text-white/90">
+                <div className="text-sm font-medium tracking-tight">{caption || "Project Gallery"}</div>
+                <div className="text-xs text-white/60 mt-1">Swipe/Use arrows</div>
+              </div>
+              <div className="text-xs text-white/70">
+                {activeIndex + 1} / {images.length}
               </div>
             </div>
-            <div className="text-xs text-white/70">
+
+            <div className="relative">
+              <div className="w-full max-h-[80vh] bg-black/20 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl border border-white/10">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={images[activeIndex]}
+                    src={images[activeIndex]}
+                    alt=""
+                    className="w-full max-h-[80vh] object-contain"
+                    initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, filter: "blur(10px)" }}
+                    transition={{ type: "spring", stiffness: 240, damping: 22 }}
+                  />
+                </AnimatePresence>
+              </div>
+
+              {images.length > 1 && (
+                <>
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prev();
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="
+                      absolute left-3 top-1/2 -translate-y-1/2
+                      h-11 w-11 rounded-full
+                      border border-white/15
+                      bg-white/10 backdrop-blur-xl
+                      text-white hover:bg-white/15
+                      shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+                      flex items-center justify-center
+                      transition
+                    "
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      next();
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="
+                      absolute right-3 top-1/2 -translate-y-1/2
+                      h-11 w-11 rounded-full
+                      border border-white/15
+                      bg-white/10 backdrop-blur-xl
+                      text-white hover:bg-white/15
+                      shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+                      flex items-center justify-center
+                      transition
+                    "
+                    aria-label="Next image"
+                  >
+                    ›
+                  </motion.button>
+                </>
+              )}
+            </div>
+
+            {caption && (
+              <div className="mt-4 text-center text-white/85 text-sm font-medium">{caption}</div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ================== DESKTOP (new premium gallery) ================== */}
+      <div className="hidden md:flex relative z-10 h-full w-full items-center justify-center px-10">
+        <motion.div
+          className="
+            w-full max-w-6xl
+            rounded-[28px]
+            border border-white/12
+            bg-white/10 backdrop-blur-2xl
+            shadow-[0_40px_120px_rgba(0,0,0,0.55)]
+            overflow-hidden
+          "
+          initial={{ opacity: 0, y: 18, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.985 }}
+          transition={{ type: "spring", stiffness: 260, damping: 24 }}
+        >
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+            <div className="min-w-0">
+              <div className="text-white font-medium tracking-tight truncate">
+                {caption || "Project Gallery"}
+              </div>
+              <div className="text-white/55 text-xs mt-0.5">
+                Use ← → keys • Click thumbnails • Esc to close
+              </div>
+            </div>
+            <div className="text-white/70 text-sm">
               {activeIndex + 1} / {images.length}
             </div>
           </div>
 
-          {/* image */}
-          <div className="relative">
-            <div className="w-full max-h-[85vh] bg-black/20 rounded-2xl overflow-hidden flex items-center justify-center shadow-2xl border border-white/10">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={images[activeIndex]}
-                  src={images[activeIndex]}
-                  alt=""
-                  className="w-full max-h-[85vh] object-contain"
-                  initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -8, filter: "blur(10px)" }}
-                  transition={{ type: "spring", stiffness: 240, damping: 22 }}
-                />
-              </AnimatePresence>
+          {/* Body */}
+          <div className="grid grid-cols-[220px_1fr]">
+            {/* Thumbnails */}
+            <div className="border-r border-white/10 bg-black/15">
+              <div className="h-[78vh] overflow-y-auto p-4 space-y-3">
+                {images.map((src, i) => {
+                  const active = i === activeIndex;
+                  return (
+                    <button
+                      key={src + i}
+                      type="button"
+                      onClick={() => setActiveIndex(i)}
+                      className={`
+                        group w-full rounded-2xl overflow-hidden
+                        border transition
+                        ${active ? "border-white/60 bg-white/10" : "border-white/10 hover:border-white/25"}
+                      `}
+                      aria-label={`Open image ${i + 1}`}
+                    >
+                      <div className="aspect-[4/3] w-full bg-black/20">
+                        <img
+                          src={src}
+                          alt=""
+                          className={`h-full w-full object-cover transition duration-500 ${
+                            active ? "scale-[1.02]" : "group-hover:scale-[1.03]"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* arrows */}
-            {images.length > 1 && (
-              <>
-                <motion.button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    prev();
-                  }}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="
-                    absolute left-3 sm:left-4 top-1/2 -translate-y-1/2
-                    h-11 w-11 rounded-full
-                    border border-white/15
-                    bg-white/10 backdrop-blur-xl
-                    text-white hover:bg-white/15
-                    shadow-[0_14px_40px_rgba(0,0,0,0.35)]
-                    flex items-center justify-center
-                    transition
-                  "
-                  aria-label="Previous image"
-                >
-                  ‹
-                </motion.button>
+            {/* Main preview */}
+            <div className="relative bg-black/10">
+              <div className="h-[78vh] w-full flex items-center justify-center p-6">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={images[activeIndex]}
+                    src={images[activeIndex]}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, filter: "blur(10px)" }}
+                    transition={{ type: "spring", stiffness: 240, damping: 22 }}
+                  />
+                </AnimatePresence>
+              </div>
 
-                <motion.button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    next();
-                  }}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="
-                    absolute right-3 sm:right-4 top-1/2 -translate-y-1/2
-                    h-11 w-11 rounded-full
-                    border border-white/15
-                    bg-white/10 backdrop-blur-xl
-                    text-white hover:bg-white/15
-                    shadow-[0_14px_40px_rgba(0,0,0,0.35)]
-                    flex items-center justify-center
-                    transition
-                  "
-                  aria-label="Next image"
-                >
-                  ›
-                </motion.button>
-              </>
-            )}
+              {/* Arrows */}
+              {images.length > 1 && (
+                <>
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prev();
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="
+                      absolute left-5 top-1/2 -translate-y-1/2
+                      h-12 w-12 rounded-full
+                      border border-white/15
+                      bg-white/10 backdrop-blur-xl
+                      text-white hover:bg-white/15
+                      shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+                      flex items-center justify-center
+                      transition
+                    "
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      next();
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="
+                      absolute right-5 top-1/2 -translate-y-1/2
+                      h-12 w-12 rounded-full
+                      border border-white/15
+                      bg-white/10 backdrop-blur-xl
+                      text-white hover:bg-white/15
+                      shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+                      flex items-center justify-center
+                      transition
+                    "
+                    aria-label="Next image"
+                  >
+                    ›
+                  </motion.button>
+                </>
+              )}
+
+              {/* Bottom gradient */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/35 to-transparent" />
+            </div>
           </div>
-
-          {/* caption */}
-          {caption && (
-            <div className="mt-4 text-center text-white/85 text-sm font-medium">
-              {caption}
-            </div>
-          )}
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

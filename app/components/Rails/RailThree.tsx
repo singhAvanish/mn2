@@ -500,4 +500,3 @@ export default function RailThree({ rail }: any) {
     </section>
   );
 }
-
